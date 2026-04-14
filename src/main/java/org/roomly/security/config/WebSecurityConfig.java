@@ -35,8 +35,11 @@ public class WebSecurityConfig implements WebMvcConfigurer {
           .csrf(AbstractHttpConfigurer::disable)
           .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .authorizeHttpRequests((auth) ->
-            auth.requestMatchers("/auth/login", "/auth/register", "/auth/refresh", "/graphql").permitAll()
-              .anyRequest().authenticated()
+            auth
+              .requestMatchers("/auth/**", "/graphql")
+              .permitAll()
+              .anyRequest()
+              .authenticated()
           )
           .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

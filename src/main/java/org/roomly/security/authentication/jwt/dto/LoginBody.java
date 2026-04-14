@@ -1,4 +1,10 @@
 package org.roomly.security.authentication.jwt.dto;
 
-public record LoginBody(String email, String password) {
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+public record LoginBody(
+  @NotBlank @Email String email,
+  @NotBlank String password
+) {
 }
