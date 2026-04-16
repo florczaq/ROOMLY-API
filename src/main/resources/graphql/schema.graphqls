@@ -1,3 +1,11 @@
 type Query{
     household: String!
+    products(barcode: String!, key: String): ProductDetails!
+}
+
+type ProductDetails {
+    barcode: String
+    name: String
+    brand: String
+    quantity: String
 }
