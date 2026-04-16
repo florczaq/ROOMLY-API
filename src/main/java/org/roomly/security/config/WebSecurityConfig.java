@@ -36,7 +36,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
           .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .authorizeHttpRequests((auth) ->
             auth
-              .requestMatchers("/auth/**", "/graphql")
+              // "open" endpoints are accessible without authentication for testing purposes,
+              // should be removed in production
+              .requestMatchers("/auth/**", "/graphql", "/open/**")
               .permitAll()
               .anyRequest()
               .authenticated()
