@@ -14,9 +14,16 @@ public class AvatarController {
     
     @GetMapping(value = "/{name}", produces = {"image/png", "image/jpeg"})
     public ResponseEntity<byte[]> getAvatar (@PathVariable String name,
-      @RequestParam(name = "colorName") String colorName
+      @RequestParam(name = "color", required = false) String color,
+      @RequestParam(name = "hex", required = false) String hex
     ) {
-        return ResponseEntity.ok(avatarService.loadAvatarFromStorage(name, colorName));
+        if (color != null) {
+            return ResponseEntity.ok(avatarService.loadAvatarFromStorage(name, color));
+        }
+        if (hex != null) {
+            return ResponseEntity.ok(avatarService.loadAvatarFromStorage(name, "#" + hex));
+        }
+        return ResponseEntity.badRequest().build();
     }
     
 }

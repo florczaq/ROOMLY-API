@@ -14,13 +14,18 @@ import java.nio.file.Path;
 @Service
 public class AvatarService {
     private final AvatarsRepository avatarsRepository;
+    private final ColorsService colorsService;
     private final String storagePath;
     
-    public AvatarService (AvatarsRepository avatarsRepository,
+    
+    public AvatarService (
+      AvatarsRepository avatarsRepository,
+      ColorsService colorsService,
       @Value("${avatar.storage.path}") String storagePath
     ) {
         this.avatarsRepository = avatarsRepository;
         this.storagePath = storagePath;
+        this.colorsService = colorsService;
     }
     
     
@@ -62,8 +67,13 @@ public class AvatarService {
     }
     
     public byte[] loadAvatarFromStorage (String name, String color) {
-        
-        String normalizedColor = color.contains("#") ? color.substring(1) : color;
+        if (color.contains("#")) {
+            color = colorsService.getColorByHex(color);
+            if (color == null) {
+                throw new RuntimeException("Color not found for hex: " + color);
+            }
+        }
+        String normalizedColor = color.toUpperCase();
         String baseName = (name + "_" + normalizedColor).toUpperCase();
         
         for (String ext : new String[]{"png", "jpg"}) {
