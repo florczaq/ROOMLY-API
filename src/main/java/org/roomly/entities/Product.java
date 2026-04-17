@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.roomly.enums.ProductInfoSource;
 import org.roomly.enums.QuantityUnits;
 
 @Entity
@@ -31,5 +32,8 @@ public class Product {
     
     @Column(unique = true, nullable = false)
     String barcode;
+    
+    @Enumerated(EnumType.STRING)
+    ProductInfoSource infoSource;
     
 }

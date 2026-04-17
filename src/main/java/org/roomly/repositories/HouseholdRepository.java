@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface HouseholdRepository extends JpaRepository<Household, String> {
+    boolean existsByJoinCode (String joinCode);
 }
