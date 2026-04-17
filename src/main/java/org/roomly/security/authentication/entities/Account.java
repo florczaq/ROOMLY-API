@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.roomly.security.authentication.enums.AuthProvider;
 
 import java.util.List;
@@ -29,7 +27,9 @@ public class Account {
     
     private String passwordHash;
     
-    @JdbcTypeCode(SqlTypes.JSON)
+    @ElementCollection
+    @CollectionTable(name = "account_devices", joinColumns = @JoinColumn(name = "account_id"))
+    @Column(name = "device_id")
     private List<String> devices;
     
     @Column(nullable = false)

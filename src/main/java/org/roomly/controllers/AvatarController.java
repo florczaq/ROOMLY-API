@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 // TODO 'open' is temporary for testing, delete in production
-@RequestMapping("/open/api/avatars")
+@RequestMapping("/api/avatars")
+//@RequestMapping("/open/api/avatars")
 @RequiredArgsConstructor
 public class AvatarController {
     private final AvatarService avatarService;

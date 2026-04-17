@@ -11,7 +11,6 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-//@Table(name = "refresh_tokens", schema = "security")
 public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,8 +20,8 @@ public class RefreshToken {
     @Setter
     @Column(name = "token", nullable = false, unique = true)
     private String token;
-    @Column(name = "uuid", nullable = false)
-    private String uuid;
+    @Column(name = "userId", nullable = false)
+    private String userId;
     
     @Column(name = "expiry_date", nullable = false)
     private long expiryDate;

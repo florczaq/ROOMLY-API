@@ -1,6 +1,5 @@
 package org.roomly.security.authentication.services;
 
-import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.roomly.security.authentication.entities.Account;
@@ -16,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +30,6 @@ public class AuthenticationService implements UserDetailsService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     
-    @Transactional
     public String registerDevice () {
         // Only provision a client device identifier here.
         // Device-only accounts are created lazily on first device login.
@@ -49,7 +48,7 @@ public class AuthenticationService implements UserDetailsService {
         // Device can be shared across multiple accounts.
         Optional<Account> deviceOnlyAccount = deviceId.flatMap(accountRepository::findByDevicesContaining)
           .filter(acc -> acc.getAuthProvider() == AuthProvider.DEVICE_ONLY);
-
+        
         Account account = deviceOnlyAccount.orElseGet(Account::new);
         
         account.setEmail(email);
@@ -71,9 +70,11 @@ public class AuthenticationService implements UserDetailsService {
         // TODO send activation email with activation link (e.g. /auth/activate?token=...)
         
         Account newAccount = accountRepository.save(account);
+        accountRepository.flush();
         return this.generateTokensForUser(newAccount.getId());
     }
     
+    @Transactional
     public TokenResponse login (String email, String password) {
         Account account = accountRepository.findByEmail(email)
           .orElseThrow(() -> new IllegalArgumentException("User with email " + email + " not found"));
@@ -92,17 +93,24 @@ public class AuthenticationService implements UserDetailsService {
     @Transactional
     public TokenResponse loginWithDevice (String deviceId) {
         Account account = accountRepository.findByDevicesContaining(deviceId)
-          .orElseGet(() -> accountRepository.save(new Account()
-            .setAuthProvider(AuthProvider.DEVICE_ONLY)
-            .setDevices(List.of(deviceId))));
-
+          .orElseGet(() -> {
+              Account newDevice = new Account()
+                .setAuthProvider(AuthProvider.DEVICE_ONLY)
+                .setDevices(List.of(deviceId));
+              Account saved = accountRepository.save(newDevice);
+              accountRepository.flush(); // Ensure ID is generated
+              return saved;
+          });
+        
+        
         if (account.getAuthProvider() != AuthProvider.DEVICE_ONLY) {
             throw new IllegalArgumentException("User with device id " + deviceId + " is not a device-only user");
         }
-
+        
         return this.generateTokensForUser(account.getId());
     }
     
+    @Transactional
     public TokenResponse refreshAccessToken (String refreshToken) {
         if (!jwtService.validateToken(refreshToken, TokenType.REFRESH)) {
             throw new IllegalArgumentException("Invalid refresh token");
@@ -116,7 +124,7 @@ public class AuthenticationService implements UserDetailsService {
             throw new IllegalArgumentException("Invalid refresh token");
         }
         
-        if (accountRepository.findFirstById(uuid).isEmpty()) {
+        if (accountRepository.findById(uuid).isEmpty()) {
             throw new IllegalArgumentException("User not found");
         }
         
@@ -140,8 +148,8 @@ public class AuthenticationService implements UserDetailsService {
     @Override
     @NonNull
     public UserDetails loadUserByUsername (@NonNull String uuid) throws UsernameNotFoundException {
-        var account = accountRepository.findFirstById(uuid)
-          .orElseThrow(() -> new IllegalArgumentException("User with id " + uuid + " not found"));
+        var account = accountRepository.findById(uuid)
+          .orElseThrow(() -> new UsernameNotFoundException("User with id " + uuid + " not found"));
         
         // For device-only users, return a dummy password since it won't be used for authentication.
         String password =

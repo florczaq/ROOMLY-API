@@ -8,12 +8,14 @@ import io.jsonwebtoken.security.Keys;
 import org.roomly.security.authentication.jwt.entities.RefreshToken;
 import org.roomly.security.authentication.jwt.repositories.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtService {
@@ -83,26 +85,36 @@ public class JwtService {
         long ttl = (type == TokenType.REFRESH) ? refreshTokenExpirationTime : accessTokenExpirationTime;
         String token = Jwts
           .builder()
+          .claims(extraClaims)
           .subject(subject)
+          .id(UUID.randomUUID().toString())
           .issuedAt(new Date())
           .expiration(Date.from(Instant.now().plusMillis(ttl)))
           .signWith(this.getSigningKey(), Jwts.SIG.HS256)
-          .claims(extraClaims)
           .claim("type", type.name())
           .compact();
         
-        if (type == TokenType.REFRESH) {
-            refreshTokenRepository.save(
-              new RefreshToken(
-                null,
-                token,
-                subject,
-                Date.from(Instant.now().plusMillis(ttl)).getTime(),
-                true
-              )
-            );
-        }
         
+        if (type == TokenType.REFRESH) {
+            try {
+                RefreshToken savedToken = refreshTokenRepository.save(
+                  new RefreshToken(
+                    null,
+                    token,
+                    subject,
+                    Date.from(Instant.now().plusMillis(ttl)).getTime(),
+                    true
+                  )
+                );
+                
+                if (savedToken.getId() == null) {
+                    throw new IllegalArgumentException("Failed to save refresh token");
+                }
+            } catch (DataIntegrityViolationException e) {
+                //Generate if same token was generated before
+                return createToken(subject, type, extraClaims);
+            }
+        }
         
         return token;
     }

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth/device")
 @RequiredArgsConstructor
@@ -17,12 +19,12 @@ public class DeviceAuthenticationController {
     private final AuthenticationService authenticationService;
     
     @PostMapping("/register")
-    public String registerDevice() {
-        return authenticationService.registerDevice();
+    public Map<String, String> registerDevice () {
+        return Map.of("deviceId", authenticationService.registerDevice());
     }
-
+    
     @PostMapping("/login")
-    public TokenResponse loginWithDevice(@RequestBody @Valid DeviceLoginBody body) {
+    public TokenResponse loginWithDevice (@RequestBody @Valid DeviceLoginBody body) {
         return authenticationService.loginWithDevice(body.deviceId());
     }
     
