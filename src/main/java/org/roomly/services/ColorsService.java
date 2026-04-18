@@ -11,7 +11,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-@SuppressWarnings("unchecked")
+@SuppressWarnings("unused")
 public class ColorsService {
     
     private final Map<String, String> hexToColor;
