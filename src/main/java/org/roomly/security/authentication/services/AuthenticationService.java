@@ -91,20 +91,12 @@ public class AuthenticationService implements UserDetailsService {
     }
     
     @Transactional
-    public TokenResponse loginWithDevice (String deviceId) {
+    public TokenResponse loginWithDevice(String deviceId) {
         Account account = accountRepository.findByDevicesContaining(deviceId)
-          .orElseGet(() -> {
-              Account newDevice = new Account()
-                .setAuthProvider(AuthProvider.DEVICE_ONLY)
-                .setDevices(List.of(deviceId));
-              Account saved = accountRepository.save(newDevice);
-              accountRepository.flush(); // Ensure ID is generated
-              return saved;
-          });
-        
+          .orElseThrow(() -> new IllegalArgumentException("Device not registered"));
         
         if (account.getAuthProvider() != AuthProvider.DEVICE_ONLY) {
-            throw new IllegalArgumentException("User with device id " + deviceId + " is not a device-only user");
+            throw new IllegalArgumentException("Device is associated with a non-device-only account");
         }
         
         return this.generateTokensForUser(account.getId());
