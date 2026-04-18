@@ -11,6 +11,7 @@ import java.util.*;
 
 @Slf4j
 @Service
+@SuppressWarnings("unchecked")
 public class ColorsService {
     
     private final Map<String, String> hexToColor;
@@ -73,6 +74,13 @@ public class ColorsService {
         return colorToHex.get(normalizedColorName);
     }
     
+    public boolean isValidColor (String colorName) {
+        return getHexByColor(colorName) != null;
+    }
+    
+    public boolean isValidHex (String hex) {
+        return getColorByHex(hex) != null;
+    }
     
     private String normalizeHex (String hex) {
         if (hex == null) {

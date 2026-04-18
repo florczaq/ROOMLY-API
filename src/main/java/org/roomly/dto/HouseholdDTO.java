@@ -1,4 +1,7 @@
 package org.roomly.dto;
 
-public record HouseholdDTO(String name, String joinCode, int membersLimit) {
+import java.util.Optional;
+
+public record HouseholdDTO(Optional<String> id, String name, String joinCode, int membersLimit) {
+    
 }

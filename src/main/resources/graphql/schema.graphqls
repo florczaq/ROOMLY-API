@@ -1,11 +1,11 @@
 type Query{
-    household: String!
+    household(householdId: String!): String!
     products(barcode: String!, key: String): ProductDetails!
 }
 
 type Mutation {
     createHousehold(name: String!, membersLimit: Int! ): Household!
-    joinHousehold(joinCode: String!): Household!
+    joinHousehold(nickname: String!, avatarName: String!, avatarColorName: String!, joinCode: String!): User!
 }
 
 type ProductDetails {
@@ -19,4 +19,15 @@ type Household {
     name: String!
     joinCode: String!
     membersLimit: Int!
+}
+
+type User {
+    nickname: String!
+    avatar: Avatar
+}
+
+type Avatar {
+    name: String!
+    colorName: String
+    colorHex: String
 }

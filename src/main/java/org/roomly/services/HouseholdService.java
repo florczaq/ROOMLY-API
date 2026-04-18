@@ -16,11 +16,15 @@ import java.util.Objects;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("unused")
 public class HouseholdService {
     private final HouseholdRepository houseHoldRepository;
     
-    public String getHousehold () {
-        return "HouseholdService";
+    public HouseholdDTO getHousehold (String householdId) {
+        return houseHoldRepository
+          .findById(householdId)
+          .orElseThrow(() -> new IllegalArgumentException("Household with id " + householdId + " not found"))
+          .toDTO();
     }
     
     @Transactional
@@ -37,17 +41,14 @@ public class HouseholdService {
           .setOwnerId(Objects.requireNonNull(context.getAuthentication()).getName())
         );
         log.info(household.toString());
-        return new HouseholdDTO(household.getName(), household.getJoinCode(), household.getMembersLimit());
+        
+        return household.toDTO();
     }
     
-    public HouseholdDTO joinHousehold (String joinCode) {
-        var household = houseHoldRepository
+    public Household getHouseHoldByJoinCode (String joinCode) {
+        return houseHoldRepository
           .findByJoinCode((joinCode))
           .orElseThrow(() -> new IllegalArgumentException("Household with join code " + joinCode + " not found"));
-        
-        
-        
-        return new HouseholdDTO(household.getName(), household.getJoinCode(), household.getMembersLimit());
     }
     
     public String updateHousehold () {

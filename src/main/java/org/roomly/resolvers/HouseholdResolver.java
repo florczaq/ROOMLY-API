@@ -11,25 +11,20 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 @RequiredArgsConstructor
+@SuppressWarnings("unused")
 public class HouseholdResolver {
     private final HouseholdService householdService;
     
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    public String household () {
-        return "HouseholdResolver";
+    public HouseholdDTO household (@Argument(name = "householdId") String id) {
+        return householdService.getHousehold(id);
     }
     
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
     public HouseholdDTO createHousehold (@Argument String name, @Argument int membersLimit) {
         return householdService.createHousehold(name, membersLimit);
-    }
-    
-    @MutationMapping
-    @PreAuthorize("isAuthenticated()")
-    public String joinHousehold (@Argument String joinCode) {
-        return "HouseholdResolver";
     }
     
     public String updateHousehold () {

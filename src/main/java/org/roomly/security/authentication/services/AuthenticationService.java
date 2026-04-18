@@ -161,4 +161,9 @@ public class AuthenticationService implements UserDetailsService {
           account.getId(), password, List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
     
+    public Account loadAccountById (String uuid) {
+        return accountRepository.findById(uuid)
+          .orElseThrow(() -> new IllegalArgumentException("User with id " + uuid + " not found"));
+    }
+    
 }
