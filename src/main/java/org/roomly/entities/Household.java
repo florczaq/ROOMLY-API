@@ -12,8 +12,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.roomly.dto.HouseholdDTO;
 
-import java.util.Optional;
-
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -48,7 +46,7 @@ public class Household {
     }
     
     public HouseholdDTO toDTO () {
-        return new HouseholdDTO(Optional.ofNullable(id), name, joinCode, membersLimit);
+        return new HouseholdDTO(id, name, joinCode, membersLimit);
     }
     
 }

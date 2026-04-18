@@ -42,10 +42,11 @@ public class User {
                \nUser {
                     id: %s,
                     account: %s,
-                    avatar: %s,
+                    avatarName: %s,
+                    avatarColorName: %s,
                     nickname: %s,
                     household: %s
-               """.formatted(id, account.getEmail(), avatarColorName, nickname, household.getName());
+               """.formatted(id, account.getId(), avatarName, avatarColorName, nickname, household.getName());
     }
     
 }

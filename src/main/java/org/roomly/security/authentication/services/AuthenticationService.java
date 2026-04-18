@@ -40,6 +40,8 @@ public class AuthenticationService implements UserDetailsService {
           .setAuthProvider(AuthProvider.DEVICE_ONLY)
           .setDevices(List.of(deviceId));
         
+        log.info("Registering new device with id: {}", deviceId);
+        
         accountRepository.save(deviceAccount);
         accountRepository.flush(); // Ensure it's persisted
         
@@ -103,6 +105,8 @@ public class AuthenticationService implements UserDetailsService {
     
     @Transactional
     public TokenResponse loginWithDevice (String deviceId) {
+        log.info("Attempting device login with device id: {}", deviceId);
+        
         Account account = accountRepository.findByDevicesContaining(deviceId)
           .orElseThrow(() -> new IllegalArgumentException("Device not registered"));
         

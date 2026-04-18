@@ -1,6 +1,7 @@
 type Query{
     household(householdId: String!): String!
     products(barcode: String!, key: String): ProductDetails!
+    householdInfo(householdId: String!): String!
 }
 
 type Mutation {
@@ -16,6 +17,7 @@ type ProductDetails {
 }
 
 type Household {
+    id: String!
     name: String!
     joinCode: String!
     membersLimit: Int!

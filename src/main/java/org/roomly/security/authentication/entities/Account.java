@@ -17,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@SuppressWarnings("JpaDataSourceORMInspection")
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -38,4 +39,15 @@ public class Account {
     
     private boolean emailVerified = false;
     
+        @Override
+        public String toString () {
+            return """
+                    \nAccount {
+                        id: %s,
+                        email: %s,
+                        authProvider: %s,
+                        emailVerified: %b,
+                        devices: %s
+                    """.formatted(id, email, authProvider, emailVerified, devices);
+        }
 }

@@ -5,6 +5,8 @@ import org.roomly.entities.User;
 import org.roomly.security.authentication.entities.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface UserRepository extends JpaRepository<User, String> {
     
     boolean existsByAccountAndHousehold (Account account, Household household);
@@ -14,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     double countByHousehold (Household household);
     
     boolean existsByHouseholdAndAvatarNameAndAvatarColorName (Household household, String avatarName, String avatarColorName);
+    
+    List<User> findAllByHouseholdId (String householdId);
 }

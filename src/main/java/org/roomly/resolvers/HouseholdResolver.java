@@ -15,6 +15,12 @@ import org.springframework.stereotype.Controller;
 public class HouseholdResolver {
     private final HouseholdService householdService;
     
+    //TODO temporary for testing, delete in production
+    @QueryMapping
+    public String householdInfo (@Argument(name = "householdId") String id) {
+        return householdService.getHouseholdInfoTest(id);
+    }
+    
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
     public HouseholdDTO household (@Argument(name = "householdId") String id) {

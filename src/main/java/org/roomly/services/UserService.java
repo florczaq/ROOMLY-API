@@ -1,6 +1,7 @@
 package org.roomly.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.roomly.dto.AvatarDTO;
 import org.roomly.dto.UserDTO;
 import org.roomly.entities.Household;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.security.Principal;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -24,8 +26,10 @@ public class UserService {
     
     public UserDTO joinHousehold (String nickname, String avatarName, String avatarColorName, String joinCode) {
         Account account = getCurrentlyAuthenticatedAccount();
+        log.info("User {} is attempting to join household with join code {}", account.getId(), joinCode);
         Household household = householdService.getHouseHoldByJoinCode(joinCode);
-        
+        log.info("Account {} is trying to join household {} with nickname '{}', avatar name '{}' and avatar color '{}'",
+          account.getId(), household.getId(), nickname, avatarName, avatarColorName);
         validateJoinHousehold(account, household, nickname, avatarName, avatarColorName);
         
         User savedUser = createAndSaveUser(nickname, avatarName, avatarColorName, account, household);
@@ -41,7 +45,12 @@ public class UserService {
         return authenticationService.loadAccountById(accountId);
     }
     
-    private void validateJoinHousehold(Account account, Household household, String nickname, String avatarName, String avatarColorName) {
+    private void validateJoinHousehold (Account account,
+      Household household,
+      String nickname,
+      String avatarName,
+      String avatarColorName
+    ) {
         validateNotAlreadyMember(account, household);
         validateNicknameAvailability(household, nickname);
         validateHouseholdCapacity(household);
@@ -50,44 +59,53 @@ public class UserService {
         validateAvatarName(avatarName);
     }
     
-    private void validateNotAlreadyMember(Account account, Household household) {
+    private void validateNotAlreadyMember (Account account, Household household) {
         if (userRepository.existsByAccountAndHousehold(account, household)) {
             throw new IllegalArgumentException("User is already a member of this household");
         }
     }
     
-    private void validateNicknameAvailability(Household household, String nickname) {
+    private void validateNicknameAvailability (Household household, String nickname) {
         if (userRepository.existsByHouseholdAndNickname(household, nickname)) {
             throw new IllegalArgumentException("Nickname is already taken in this household");
         }
     }
     
-    private void validateHouseholdCapacity(Household household) {
+    private void validateHouseholdCapacity (Household household) {
         if (userRepository.countByHousehold(household) >= household.getMembersLimit()) {
             throw new IllegalStateException("Household has reached its members limit");
         }
     }
     
-    private void validateAvatarCombinationAvailability(Household household, String avatarName, String avatarColorName) {
-        if (userRepository.existsByHouseholdAndAvatarNameAndAvatarColorName(household, avatarName, avatarColorName)) {
+    private void validateAvatarCombinationAvailability (Household household,
+      String avatarName,
+      String avatarColorName
+    ) {
+        if (userRepository.existsByHouseholdAndAvatarNameAndAvatarColorName(
+          household, avatarName, avatarColorName)) {
             throw new IllegalArgumentException("Avatar name or color is already taken in this household");
         }
     }
     
-    private void validateAvatarColor(String avatarColorName) {
+    private void validateAvatarColor (String avatarColorName) {
         if (!colorsService.isValidColor(avatarColorName)) {
             throw new IllegalArgumentException("Invalid avatar color: " + avatarColorName);
         }
     }
     
-    private void validateAvatarName(String avatarName) {
+    private void validateAvatarName (String avatarName) {
         //TODO validate by checking if the avatar name exists in the catalog of available avatars. For now, just check if it's not empty.
         if (avatarName == null || avatarName.trim().isEmpty()) {
             throw new IllegalArgumentException("Avatar name cannot be empty");
         }
     }
     
-    private User createAndSaveUser(String nickname, String avatarName, String avatarColorName, Account account, Household household) {
+    private User createAndSaveUser (String nickname,
+      String avatarName,
+      String avatarColorName,
+      Account account,
+      Household household
+    ) {
         return userRepository.save(
           new User()
             .setNickname(nickname)
@@ -97,7 +115,7 @@ public class UserService {
             .setAvatarColorName(avatarColorName));
     }
     
-    private UserDTO buildUserDTO(User user) {
+    private UserDTO buildUserDTO (User user) {
         return new UserDTO(
           user.getNickname(),
           new AvatarDTO(
