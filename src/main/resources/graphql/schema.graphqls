@@ -3,9 +3,20 @@ type Query{
     products(barcode: String!, key: String): ProductDetails!
 }
 
+type Mutation {
+    createHousehold(name: String!, membersLimit: Int! ): Household!
+    joinHousehold(joinCode: String!): Household!
+}
+
 type ProductDetails {
     barcode: String
     name: String
     brand: String
     quantity: String
+}
+
+type Household {
+    name: String!
+    joinCode: String!
+    membersLimit: Int!
 }

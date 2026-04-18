@@ -24,9 +24,23 @@ public class Household {
     
     @Column(unique = true, nullable = false, length = 6)
     String joinCode;
-
+    
     @Min(1)
     @Max(30)
     @Column(nullable = false)
     int membersLimit;
+    @Column(nullable = false)
+    String ownerId;
+    
+    @Override
+    public String toString () {
+        return """
+               \nHousehold {
+                    id: %s,
+                    name: %s,
+                    joinCode: %s,
+                    membersLimit: %d,
+                    ownerId: %s
+               """.formatted(id, name, joinCode, membersLimit, ownerId);
+    }
 }

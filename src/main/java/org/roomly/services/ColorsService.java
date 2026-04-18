@@ -27,6 +27,7 @@ public class ColorsService {
         try {
             Path filePath = Path.of(colorsCatalogPath, colorsCatalogFilename);
             if (filePath.toFile().exists()) {
+                log.info("Loading colors catalog from: {}", filePath);
                 String jsonContent = Files.readString(filePath);
                 JSONParser parser = new JSONParser(jsonContent);
                 Object parsed = parser.parse();
@@ -43,6 +44,7 @@ public class ColorsService {
                             parsedColorToHex.put(colorName, hex);
                         }
                     }
+                    log.info("Loaded {} colors into catalog", parsedHexToColor.size());
                 } else {
                     log.error("Colors catalog JSON is not an array: {}", colorsCatalogFilename);
                 }

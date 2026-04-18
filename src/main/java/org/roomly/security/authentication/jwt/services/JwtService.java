@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.roomly.security.authentication.jwt.entities.RefreshToken;
 import org.roomly.security.authentication.jwt.repositories.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class JwtService {
     
@@ -50,12 +52,21 @@ public class JwtService {
             String type = claims.get("type", String.class);
             Date expiration = claims.getExpiration();
             
+            if (expectedType == TokenType.REFRESH) {
+                RefreshToken storedToken = refreshTokenRepository.findByToken(token).orElse(null);
+                if (storedToken == null || !storedToken.isActive() || storedToken.getExpiryDate() < System.currentTimeMillis()) {
+                    log.warn("Refresh token not found or invalid in database");
+                    return false;
+                }
+            }
+            
             return subject != null
               && !subject.isBlank()
               && expiration != null
               && expiration.after(new Date())
               && expectedType.name().equals(type);
         } catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
             return false;
         }
     }
@@ -93,7 +104,6 @@ public class JwtService {
           .signWith(this.getSigningKey(), Jwts.SIG.HS256)
           .claim("type", type.name())
           .compact();
-        
         
         if (type == TokenType.REFRESH) {
             try {

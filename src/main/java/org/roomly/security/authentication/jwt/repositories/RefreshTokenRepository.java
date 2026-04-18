@@ -15,4 +15,5 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Query("SELECT rt FROM RefreshToken rt WHERE rt.active = false OR rt.expiryDate < :now")
     List<RefreshToken> findAllExpiredAndInactive(@Param("now") long now);
     
+    Optional<RefreshToken> findByToken (String token);
 }

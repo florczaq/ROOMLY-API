@@ -2,13 +2,18 @@ package org.roomly.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.roomly.dto.HouseholdDTO;
 import org.roomly.entities.Household;
 import org.roomly.enums.CodeCharacters;
 import org.roomly.generators.GeneratedCodeFactory;
 import org.roomly.repositories.HouseholdRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HouseholdService {
@@ -19,16 +24,28 @@ public class HouseholdService {
     }
     
     @Transactional
-    public HouseholdDTO addHousehold (HouseholdDTO newHousehold) {
+    public HouseholdDTO createHousehold (String name, int membersLimit) {
+        var context = SecurityContextHolder.getContext();
         var code = generateNewJoinCode();
         var id = generateNewHouseholdId();
         
         Household household = houseHoldRepository.save(new Household()
           .setId(id)
-          .setName(newHousehold.name())
-          .setMembersLimit(newHousehold.membersLimit())
+          .setName(name)
+          .setMembersLimit(membersLimit)
           .setJoinCode(code)
+          .setOwnerId(Objects.requireNonNull(context.getAuthentication()).getName())
         );
+        log.info(household.toString());
+        return new HouseholdDTO(household.getName(), household.getJoinCode(), household.getMembersLimit());
+    }
+    
+    public HouseholdDTO joinHousehold (String joinCode) {
+        var household = houseHoldRepository
+          .findByJoinCode((joinCode))
+          .orElseThrow(() -> new IllegalArgumentException("Household with join code " + joinCode + " not found"));
+        
+        
         
         return new HouseholdDTO(household.getName(), household.getJoinCode(), household.getMembersLimit());
     }
