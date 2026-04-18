@@ -2,6 +2,7 @@ package org.roomly.security.authentication.services;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.enums.AuthProvider;
 import org.roomly.security.authentication.jwt.dto.TokenResponse;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService implements UserDetailsService {
@@ -30,10 +32,19 @@ public class AuthenticationService implements UserDetailsService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     
+    @Transactional
     public String registerDevice () {
-        // Only provision a client device identifier here.
-        // Device-only accounts are created lazily on first device login.
-        return UUID.randomUUID().toString();
+        String deviceId = UUID.randomUUID().toString();
+        
+        Account deviceAccount = new Account()
+          .setAuthProvider(AuthProvider.DEVICE_ONLY)
+          .setDevices(List.of(deviceId));
+        
+        accountRepository.save(deviceAccount);
+        accountRepository.flush(); // Ensure it's persisted
+        
+        
+        return deviceId;
     }
     
     @Transactional
@@ -91,7 +102,7 @@ public class AuthenticationService implements UserDetailsService {
     }
     
     @Transactional
-    public TokenResponse loginWithDevice(String deviceId) {
+    public TokenResponse loginWithDevice (String deviceId) {
         Account account = accountRepository.findByDevicesContaining(deviceId)
           .orElseThrow(() -> new IllegalArgumentException("Device not registered"));
         
