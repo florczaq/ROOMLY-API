@@ -300,7 +300,15 @@ class HouseholdIntegrationTest {
             log.info("  Account ID: {}", account.getId());
             log.info("  Account Email: {}", account.getEmail());
             log.info("  Auth Provider: {}", account.getAuthProvider());
-            log.info("  Devices: {}", account.getDevices());
+            // Safely access lazy-loaded devices collection
+            String devicesInfo;
+            try {
+                List<String> devicesList = account.getDevices();
+                devicesInfo = devicesList != null ? devicesList.toString() : "null";
+            } catch (Exception e) {
+                devicesInfo = "<not loaded>";
+            }
+            log.info("  Devices: {}", devicesInfo);
         }
         
         // Assertions

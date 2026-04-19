@@ -2,6 +2,7 @@ type Query{
     household(householdId: String!): String!
     products(barcode: String!, key: String): ProductDetails!
     householdInfo(householdId: String!): String!
+    availableAvatarsAndColors: AvatarsAndColors!
 }
 
 type Mutation {
@@ -32,4 +33,14 @@ type Avatar {
     name: String!
     colorName: String
     colorHex: String
+}
+
+type AvatarsAndColors {
+    avatars: [String]!
+    colors: [Color]!
+}
+
+type Color{
+    name: String!
+    hex: String!
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,6 +57,11 @@ public class ColorsService {
         
         this.hexToColor = Collections.unmodifiableMap(parsedHexToColor);
         this.colorToHex = Collections.unmodifiableMap(parsedColorToHex);
+    }
+    
+    public Map<String, String> getAllColors () {
+        return colorToHex.entrySet().stream()
+          .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
     
     public String getColorByHex (String hex) {

@@ -41,6 +41,12 @@ public class Account {
     
         @Override
         public String toString () {
+            String devicesStr;
+            try {
+                devicesStr = devices != null ? devices.toString() : "null";
+            } catch (Exception e) {
+                devicesStr = "<not loaded>";
+            }
             return """
                     \nAccount {
                         id: %s,
@@ -49,6 +55,6 @@ public class Account {
                         emailVerified: %b,
                         devices: %s
                     }
-                    """.formatted(id, email, authProvider, emailVerified, devices);
+                    """.formatted(id, email, authProvider, emailVerified, devicesStr);
         }
 }
