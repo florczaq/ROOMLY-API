@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.roomly.entities.Household;
-import org.roomly.entities.User;
+import org.roomly.entities.Profile;
 import org.roomly.repositories.HouseholdRepository;
-import org.roomly.repositories.UserRepository;
+import org.roomly.repositories.ProfileRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.jwt.dto.TokenResponse;
 import org.roomly.security.authentication.repositories.AccountRepository;
@@ -47,7 +47,7 @@ class HouseholdIntegrationTest {
     private HouseholdRepository householdRepository;
     
     @Autowired
-    private UserRepository userRepository;
+    private ProfileRepository profileRepository;
     
     @BeforeEach
     void setUp () {
@@ -58,7 +58,7 @@ class HouseholdIntegrationTest {
           .build();
         
         // Clean up database before each test
-        userRepository.deleteAll();
+        profileRepository.deleteAll();
         householdRepository.deleteAll();
         accountRepository.deleteAll();
     }
@@ -288,15 +288,15 @@ class HouseholdIntegrationTest {
         Household household = householdRepository.findById(householdId).orElseThrow();
         log.info("Household from DB: {}", household);
         
-        List<User> users = userRepository.findAllByHouseholdId(householdId);
-        log.info("\nTotal Users in Household: {}", users.size());
+        List<Profile> profiles = profileRepository.findAllByHouseholdId(householdId);
+        log.info("\nTotal Users in Household: {}", profiles.size());
         
-        for (User user : users) {
-            Account account = user.getAccount();
+        for (Profile profile : profiles) {
+            Account account = profile.getAccount();
             log.info("\nUser Profile:");
-            log.info("  User ID: {}", user.getId());
-            log.info("  Nickname: {}", user.getNickname());
-            log.info("  Avatar: {} ({})", user.getAvatarName(), user.getAvatarColorName());
+            log.info("  User ID: {}", profile.getId());
+            log.info("  Nickname: {}", profile.getNickname());
+            log.info("  Avatar: {} ({})", profile.getAvatarName(), profile.getAvatarColorName());
             log.info("  Account ID: {}", account.getId());
             log.info("  Account Email: {}", account.getEmail());
             log.info("  Auth Provider: {}", account.getAuthProvider());
@@ -306,7 +306,7 @@ class HouseholdIntegrationTest {
         // Assertions
         log.info("\n=== RUNNING ASSERTIONS ===");
         
-        assertEquals(3, users.size(), "Should have 3 users in household");
+        assertEquals(3, profiles.size(), "Should have 3 users in household");
         assertEquals(householdName, household.getName(), "Household name should match");
         assertEquals(membersLimit, household.getMembersLimit(), "Members limit should match");
         assertEquals(joinCode, household.getJoinCode(), "Join code should match");
@@ -315,13 +315,13 @@ class HouseholdIntegrationTest {
         assertEquals(3, accountRepository.count(), "Should have 3 accounts in database");
         
         // Verify user nicknames
-        List<String> nicknames = users.stream().map(User::getNickname).toList();
+        List<String> nicknames = profiles.stream().map(Profile::getNickname).toList();
         assertTrue(nicknames.contains("HomeOwner"), "Should have HomeOwner");
         assertTrue(nicknames.contains("DeviceUser1"), "Should have DeviceUser1");
         assertTrue(nicknames.contains("DeviceUser2"), "Should have DeviceUser2");
         
         // Verify avatar uniqueness in household
-        List<String> avatarCombos = users.stream()
+        List<String> avatarCombos = profiles.stream()
           .map(u -> u.getAvatarName() + "-" + u.getAvatarColorName())
           .toList();
         assertEquals(3, avatarCombos.size(), "Should have 3 unique avatar combinations");

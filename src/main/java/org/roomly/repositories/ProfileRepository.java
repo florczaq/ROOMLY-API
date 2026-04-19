@@ -1,13 +1,13 @@
 package org.roomly.repositories;
 
 import org.roomly.entities.Household;
-import org.roomly.entities.User;
+import org.roomly.entities.Profile;
 import org.roomly.security.authentication.entities.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface UserRepository extends JpaRepository<User, String> {
+public interface ProfileRepository extends JpaRepository<Profile, String> {
     
     boolean existsByAccountAndHousehold (Account account, Household household);
     
@@ -17,5 +17,5 @@ public interface UserRepository extends JpaRepository<User, String> {
     
     boolean existsByHouseholdAndAvatarNameAndAvatarColorName (Household household, String avatarName, String avatarColorName);
     
-    List<User> findAllByHouseholdId (String householdId);
+    List<Profile> findAllByHouseholdId (String householdId);
 }

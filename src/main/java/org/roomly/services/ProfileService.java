@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.roomly.dto.AvatarDTO;
 import org.roomly.dto.UserDTO;
 import org.roomly.entities.Household;
-import org.roomly.entities.User;
-import org.roomly.repositories.UserRepository;
+import org.roomly.entities.Profile;
+import org.roomly.repositories.ProfileRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.services.AuthenticationService;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,8 +18,8 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService {
-    private final UserRepository userRepository;
+public class ProfileService {
+    private final ProfileRepository profileRepository;
     private final ColorsService colorsService;
     private final HouseholdService householdService;
     private final AuthenticationService authenticationService;
@@ -32,9 +32,9 @@ public class UserService {
           account.getId(), household.getId(), nickname, avatarName, avatarColorName);
         validateJoinHousehold(account, household, nickname, avatarName, avatarColorName);
         
-        User savedUser = createAndSaveUser(nickname, avatarName, avatarColorName, account, household);
+        Profile savedProfile = createAndSaveUser(nickname, avatarName, avatarColorName, account, household);
         
-        return buildUserDTO(savedUser);
+        return buildUserDTO(savedProfile);
     }
     
     private Account getCurrentlyAuthenticatedAccount () {
@@ -60,19 +60,19 @@ public class UserService {
     }
     
     private void validateNotAlreadyMember (Account account, Household household) {
-        if (userRepository.existsByAccountAndHousehold(account, household)) {
+        if (profileRepository.existsByAccountAndHousehold(account, household)) {
             throw new IllegalArgumentException("User is already a member of this household");
         }
     }
     
     private void validateNicknameAvailability (Household household, String nickname) {
-        if (userRepository.existsByHouseholdAndNickname(household, nickname)) {
+        if (profileRepository.existsByHouseholdAndNickname(household, nickname)) {
             throw new IllegalArgumentException("Nickname is already taken in this household");
         }
     }
     
     private void validateHouseholdCapacity (Household household) {
-        if (userRepository.countByHousehold(household) >= household.getMembersLimit()) {
+        if (profileRepository.countByHousehold(household) >= household.getMembersLimit()) {
             throw new IllegalStateException("Household has reached its members limit");
         }
     }
@@ -81,7 +81,7 @@ public class UserService {
       String avatarName,
       String avatarColorName
     ) {
-        if (userRepository.existsByHouseholdAndAvatarNameAndAvatarColorName(
+        if (profileRepository.existsByHouseholdAndAvatarNameAndAvatarColorName(
           household, avatarName, avatarColorName)) {
             throw new IllegalArgumentException("Avatar name or color is already taken in this household");
         }
@@ -100,14 +100,14 @@ public class UserService {
         }
     }
     
-    private User createAndSaveUser (String nickname,
+    private Profile createAndSaveUser (String nickname,
       String avatarName,
       String avatarColorName,
       Account account,
       Household household
     ) {
-        return userRepository.save(
-          new User()
+        return profileRepository.save(
+          new Profile()
             .setNickname(nickname)
             .setAccount(account)
             .setHousehold(household)
@@ -115,13 +115,13 @@ public class UserService {
             .setAvatarColorName(avatarColorName));
     }
     
-    private UserDTO buildUserDTO (User user) {
+    private UserDTO buildUserDTO (Profile profile) {
         return new UserDTO(
-          user.getNickname(),
+          profile.getNickname(),
           new AvatarDTO(
-            user.getAvatarName(),
-            user.getAvatarColorName(),
-            colorsService.getHexByColor(user.getAvatarColorName())
+            profile.getAvatarName(),
+            profile.getAvatarColorName(),
+            colorsService.getHexByColor(profile.getAvatarColorName())
           )
         );
     }

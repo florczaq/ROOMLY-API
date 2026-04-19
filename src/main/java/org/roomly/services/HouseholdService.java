@@ -5,14 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.roomly.dto.HouseholdDTO;
 import org.roomly.entities.Household;
+import org.roomly.entities.Profile;
 import org.roomly.enums.CodeCharacters;
 import org.roomly.generators.GeneratedCodeFactory;
 import org.roomly.repositories.HouseholdRepository;
-import org.roomly.repositories.UserRepository;
+import org.roomly.repositories.ProfileRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -20,7 +19,7 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public class HouseholdService {
     private final HouseholdRepository houseHoldRepository;
-    private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     
     public HouseholdDTO getHousehold (String householdId) {
         return houseHoldRepository
@@ -31,19 +30,23 @@ public class HouseholdService {
     
     @Transactional
     public HouseholdDTO createHousehold (String name, int membersLimit) {
-        var context = SecurityContextHolder.getContext();
-        var code = generateNewJoinCode();
-        var id = generateNewHouseholdId();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String ownerId = authentication != null ? authentication.getName() : null;
         
-        Household household = houseHoldRepository.save(new Household()
-          .setId(id)
-          .setName(name)
-          .setMembersLimit(membersLimit)
-          .setJoinCode(code)
-          .setOwnerId(Objects.requireNonNull(context.getAuthentication()).getName())
+        Profile ownerProfile = ownerId != null
+                               ? profileRepository.findById(ownerId).orElse(null)
+                               : null;
+        
+        Household household = houseHoldRepository.save(
+          new Household()
+            .setId(generateNewHouseholdId())
+            .setName(name)
+            .setMembersLimit(membersLimit)
+            .setJoinCode(generateNewJoinCode())
+            .setOwner(ownerProfile)
         );
-        log.info(household.toString());
         
+        log.info(household.toString());
         return household.toDTO();
     }
     
@@ -81,7 +84,7 @@ public class HouseholdService {
         var household = houseHoldRepository.findById(householdId)
           .orElseThrow(() -> new IllegalArgumentException("Household with id " + householdId + " not found"));
         
-        var users = userRepository.findAllByHouseholdId(householdId);
+        var users = profileRepository.findAllByHouseholdId(householdId);
         
         StringBuilder sb = new StringBuilder();
         sb.append(household).append("\nMembers:\n");

@@ -16,7 +16,7 @@ import org.roomly.security.authentication.entities.Account;
 @Getter
 @Accessors(chain = true)
 @SuppressWarnings("JpaDataSourceORMInspection")
-public class User {
+public class Profile {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

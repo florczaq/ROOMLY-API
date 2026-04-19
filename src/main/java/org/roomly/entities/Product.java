@@ -30,7 +30,7 @@ public class Product {
     @Enumerated(EnumType.STRING)
     QuantityUnits unit;
     
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     String barcode;
     
     @Enumerated(EnumType.STRING)

@@ -35,7 +35,7 @@ public class ShoppingListItem {
     @Column(nullable = false)
     @Min(1)
     @Max(1000)
-    private int quantity = 1;
+    private int count = 1;
     
     private boolean purchased = false;
     
@@ -47,7 +47,7 @@ public class ShoppingListItem {
     
     @ManyToOne
     @JoinColumn(name = "added_by_user_id")
-    private User addedBy;
+    private Profile addedBy;
     
     private String notes;
     

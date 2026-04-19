@@ -1,8 +1,6 @@
 package org.roomly.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
@@ -18,9 +16,11 @@ import org.roomly.dto.HouseholdDTO;
 @Getter
 @Setter
 @Accessors(chain = true)
+@SuppressWarnings("JpaDataSourceORMInspection")
 public class Household {
     @Id
     String id;
+    
     String name;
     
     @Column(unique = true, nullable = false, length = 6)
@@ -30,8 +30,10 @@ public class Household {
     @Max(30)
     @Column(nullable = false)
     int membersLimit;
-    @Column(nullable = false)
-    String ownerId;
+    
+    @OneToOne
+    @JoinColumn(name = "owner_id", nullable = false)
+    Profile owner;
     
     @Override
     public String toString () {
@@ -42,7 +44,7 @@ public class Household {
                     joinCode: %s,
                     membersLimit: %d,
                     ownerId: %s
-               """.formatted(id, name, joinCode, membersLimit, ownerId);
+               """.formatted(id, name, joinCode, membersLimit, owner.getId());
     }
     
     public HouseholdDTO toDTO () {

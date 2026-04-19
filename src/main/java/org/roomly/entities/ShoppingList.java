@@ -25,9 +25,15 @@ public class ShoppingList {
     @JoinColumn(name = "household_id", nullable = false)
     Household household;
     
+    /**
+     * Each shopping list is owned by a single user
+     * and a user can own one shopping list.
+     * If owner is null, shopping list is considered
+     * shared and can be accessed by all household members.
+     */
     @OneToOne
-    @JoinColumn(name = "owner_id", nullable = false)
-    User owner;
+    @JoinColumn(name = "owner_id")
+    Profile owner;
     
     @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
     List<ShoppingListItem> items;
