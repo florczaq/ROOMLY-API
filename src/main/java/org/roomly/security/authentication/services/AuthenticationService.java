@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -108,7 +107,7 @@ public class AuthenticationService implements UserDetailsService {
         log.info("Attempting device login with device id: {}", deviceId);
         
         Account account = accountRepository.findByDevicesContaining(deviceId)
-          .orElseThrow(() -> new IllegalArgumentException("Device not registered"));
+          .orElseThrow(() -> new IllegalArgumentException("Device not registered " + deviceId));
         
         if (account.getAuthProvider() != AuthProvider.DEVICE_ONLY) {
             throw new IllegalArgumentException("Device is associated with a non-device-only account");

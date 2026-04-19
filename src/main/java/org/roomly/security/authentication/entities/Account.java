@@ -48,6 +48,7 @@ public class Account {
                         authProvider: %s,
                         emailVerified: %b,
                         devices: %s
+                    }
                     """.formatted(id, email, authProvider, emailVerified, devices);
         }
 }
