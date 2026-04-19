@@ -33,7 +33,7 @@ public class Profile {
     String nickname;
     
     @ManyToOne
-    @JoinColumn(name = "household_id", nullable = false)
+    @JoinColumn(name = "household_id")
     Household household;
     
     @Override

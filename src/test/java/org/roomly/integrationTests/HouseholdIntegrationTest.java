@@ -105,9 +105,9 @@ class HouseholdIntegrationTest {
         String createHouseholdMutation = String.format(
           """
           {
-              "query": "mutation { createHousehold(name: \\"%s\\", membersLimit: %d) { id name joinCode membersLimit } }"
+              "query": "mutation { createHousehold(name: \\"%s\\", membersLimit: %d, nickname: \\"%s\\", avatarName: \\"%s\\", avatarColorName: \\"%s\\") { id name joinCode membersLimit } }"
           }
-          """, householdName, membersLimit
+          """, householdName, membersLimit, "HomeOwner", "cat", "blue"
         );
         
         MvcResult householdResult = mockMvc.perform(post("/graphql")

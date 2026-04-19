@@ -5,7 +5,7 @@ type Query{
 }
 
 type Mutation {
-    createHousehold(name: String!, membersLimit: Int! ): Household!
+    createHousehold(name: String!, membersLimit: Int!, nickname: String!, avatarName: String!, avatarColorName: String! ): Household!
     joinHousehold(nickname: String!, avatarName: String!, avatarColorName: String!, joinCode: String!): User!
 }
 

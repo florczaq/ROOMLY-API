@@ -15,7 +15,11 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     
     double countByHousehold (Household household);
     
-    boolean existsByHouseholdAndAvatarNameAndAvatarColorName (Household household, String avatarName, String avatarColorName);
+    boolean existsByHouseholdAndAvatarNameAndAvatarColorName (Household household,
+      String avatarName,
+      String avatarColorName
+    );
     
     List<Profile> findAllByHouseholdId (String householdId);
+    
 }

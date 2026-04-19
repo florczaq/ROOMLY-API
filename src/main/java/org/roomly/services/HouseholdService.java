@@ -10,6 +10,7 @@ import org.roomly.enums.CodeCharacters;
 import org.roomly.generators.GeneratedCodeFactory;
 import org.roomly.repositories.HouseholdRepository;
 import org.roomly.repositories.ProfileRepository;
+import org.roomly.security.authentication.services.AuthenticationService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class HouseholdService {
     private final HouseholdRepository houseHoldRepository;
     private final ProfileRepository profileRepository;
+    private final AuthenticationService authenticationService;
     
     public HouseholdDTO getHousehold (String householdId) {
         return houseHoldRepository
@@ -29,14 +31,30 @@ public class HouseholdService {
     }
     
     @Transactional
-    public HouseholdDTO createHousehold (String name, int membersLimit) {
+    public HouseholdDTO createHousehold (String name,
+      int membersLimit,
+      String nickname,
+      String avatarName,
+      String avatarColorName
+    ) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        String ownerId = authentication != null ? authentication.getName() : null;
         
-        Profile ownerProfile = ownerId != null
-                               ? profileRepository.findById(ownerId).orElse(null)
-                               : null;
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("User must be authenticated to create a household");
+        }
         
+        var account = authenticationService.loadAccountById(authentication.getName());
+        
+        //Create owner profile without household
+        Profile ownerProfile = profileRepository.save(
+          new Profile()
+            .setAccount(account)
+            .setNickname(nickname)
+            .setAvatarName(avatarName)
+            .setAvatarColorName(avatarColorName)
+        );
+        
+        //Create household with the owner profile
         Household household = houseHoldRepository.save(
           new Household()
             .setId(generateNewHouseholdId())
@@ -45,6 +63,10 @@ public class HouseholdService {
             .setJoinCode(generateNewJoinCode())
             .setOwner(ownerProfile)
         );
+        
+        // Update the owner profile with the household reference
+        ownerProfile.setHousehold(household);
+        profileRepository.save(ownerProfile);
         
         log.info(household.toString());
         return household.toDTO();

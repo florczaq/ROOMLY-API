@@ -29,8 +29,13 @@ public class HouseholdResolver {
     
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public HouseholdDTO createHousehold (@Argument String name, @Argument int membersLimit) {
-        return householdService.createHousehold(name, membersLimit);
+    public HouseholdDTO createHousehold (@Argument String name,
+      @Argument int membersLimit,
+      @Argument String nickname,
+      @Argument String avatarName,
+      @Argument String avatarColorName
+    ) {
+        return householdService.createHousehold(name, membersLimit, nickname, avatarName, avatarColorName);
     }
     
     public String updateHousehold () {
