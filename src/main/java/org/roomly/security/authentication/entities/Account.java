@@ -28,7 +28,7 @@ public class Account {
     
     private String passwordHash;
     
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "account_devices", joinColumns = @JoinColumn(name = "account_id"))
     @Column(name = "device_id")
     private List<String> devices;
@@ -39,22 +39,23 @@ public class Account {
     
     private boolean emailVerified = false;
     
-        @Override
-        public String toString () {
-            String devicesStr;
-            try {
-                devicesStr = devices != null ? devices.toString() : "null";
-            } catch (Exception e) {
-                devicesStr = "<not loaded>";
-            }
-            return """
-                    \nAccount {
-                        id: %s,
-                        email: %s,
-                        authProvider: %s,
-                        emailVerified: %b,
-                        devices: %s
-                    }
-                    """.formatted(id, email, authProvider, emailVerified, devicesStr);
+    @Override
+    public String toString () {
+        //Handle lazy loading of devices to avoid potential issues in toString()
+        String devicesStr;
+        try {
+            devicesStr = devices != null ? devices.toString() : "null";
+        } catch (Exception e) {
+            devicesStr = "<not loaded>";
         }
+        return """
+               \nAccount {
+                   id: %s,
+                   email: %s,
+                   authProvider: %s,
+                   emailVerified: %b,
+                   devices: %s
+               }
+               """.formatted(id, email, authProvider, emailVerified, devicesStr);
+    }
 }

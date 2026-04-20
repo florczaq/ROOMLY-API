@@ -48,7 +48,12 @@ class AvatarsIntegrationTest {
             .andReturn();
         
         String response = result.getResponse().getContentAsString();
-        log.info("Response: {}", response);
+        
+        ObjectMapper objectMapper = new ObjectMapper();
+        Object jsonObject = objectMapper.readValue(response, Object.class);
+        String prettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+        
+        log.info("Response:\n{}", prettyJson);
         log.info("Status: {}", result.getResponse().getStatus());
     }
 }

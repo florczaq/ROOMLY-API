@@ -1,7 +1,6 @@
 package org.roomly.integrationTests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.roomly.entities.Household;
@@ -29,7 +28,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Slf4j
 class HouseholdIntegrationTest {
     
     @Autowired
@@ -65,10 +63,10 @@ class HouseholdIntegrationTest {
     
     @Test
     void testCompleteHouseholdFlow () throws Exception {
-        log.info("=== Starting Complete Household Flow Integration Test ===");
+        System.out.println("=== Starting Complete Household Flow Integration Test ===");
         
         // Step 1: Create user with account (email/password)
-        log.info("--- Step 1: Creating user with email/password account ---");
+        System.out.println("--- Step 1: Creating user with email/password account ---");
         String email = "owner@roomly.com";
         String password = "SecurePassword123";
         
@@ -88,17 +86,17 @@ class HouseholdIntegrationTest {
           TokenResponse.class
         );
         
-        log.info("✓ Owner account created successfully");
-        log.info("  Access Token: {}", ownerTokens.accessToken().substring(0, 20) + "...");
+        System.out.println("✓ Owner account created successfully");
+        System.out.println("  Access Token: " + ownerTokens.accessToken().substring(0, 20) + "...");
         
         // Verify account was created
         Account ownerAccount = accountRepository.findByEmail(email).orElseThrow();
-        log.info("  Account ID: {}", ownerAccount.getId());
-        log.info("  Email: {}", ownerAccount.getEmail());
-        log.info("  Auth Provider: {}", ownerAccount.getAuthProvider());
+        System.out.println("  Account ID: " + ownerAccount.getId());
+        System.out.println("  Email: " + ownerAccount.getEmail());
+        System.out.println("  Auth Provider: " + ownerAccount.getAuthProvider());
         
         // Step 2: Create household
-        log.info("--- Step 2: Creating household ---");
+        System.out.println("--- Step 2: Creating household ---");
         String householdName = "My Awesome Household";
         int membersLimit = 5;
         
@@ -118,7 +116,7 @@ class HouseholdIntegrationTest {
           .andReturn();
         
         String householdResponse = householdResult.getResponse().getContentAsString();
-        log.info("  GraphQL Response: {}", householdResponse);
+        System.out.println("  GraphQL Response: " + householdResponse);
         
         // Extract household data from GraphQL response
         Map<String, Object> householdGraphqlResponse = objectMapper.readValue(householdResponse, Map.class);
@@ -128,14 +126,14 @@ class HouseholdIntegrationTest {
         String householdId = (String) householdData.get("id");
         String joinCode = (String) householdData.get("joinCode");
         
-        log.info("✓ Household created successfully");
-        log.info("  Household ID: {}", householdId);
-        log.info("  Name: {}", householdData.get("name"));
-        log.info("  Join Code: {}", joinCode);
-        log.info("  Members Limit: {}", householdData.get("membersLimit"));
+        System.out.println("✓ Household created successfully");
+        System.out.println("  Household ID: " + householdId);
+        System.out.println("  Name: " + householdData.get("name"));
+        System.out.println("  Join Code: " + joinCode);
+        System.out.println("  Members Limit: " + householdData.get("membersLimit"));
         
         // Step 3: Create 2 users with device authentication
-        log.info("--- Step 3: Creating 2 device accounts ---");
+        System.out.println("--- Step 3: Creating 2 device accounts ---");
         
         // Device 1
         MvcResult device1Result = mockMvc.perform(post("/auth/device/register")
@@ -149,8 +147,8 @@ class HouseholdIntegrationTest {
         );
         String deviceId1 = device1Data.get("deviceId");
         
-        log.info("✓ Device 1 registered");
-        log.info("  Device ID: {}", deviceId1);
+        System.out.println("✓ Device 1 registered");
+        System.out.println("  Device ID: " + deviceId1);
         
         // Login with device 1
         String device1LoginJson = objectMapper.writeValueAsString(Map.of("deviceId", deviceId1));
@@ -164,7 +162,7 @@ class HouseholdIntegrationTest {
           device1LoginResult.getResponse().getContentAsString(),
           TokenResponse.class
         );
-        log.info("  Device 1 logged in successfully");
+        System.out.println("  Device 1 logged in successfully");
         
         // Device 2
         MvcResult device2Result = mockMvc.perform(post("/auth/device/register")
@@ -178,8 +176,8 @@ class HouseholdIntegrationTest {
         );
         String deviceId2 = device2Data.get("deviceId");
         
-        log.info("✓ Device 2 registered");
-        log.info("  Device ID: {}", deviceId2);
+        System.out.println("✓ Device 2 registered");
+        System.out.println("  Device ID: " + deviceId2);
         
         // Login with device 2
         String device2LoginJson = objectMapper.writeValueAsString(Map.of("deviceId", deviceId2));
@@ -193,29 +191,10 @@ class HouseholdIntegrationTest {
           device2LoginResult.getResponse().getContentAsString(),
           TokenResponse.class
         );
-        log.info("  Device 2 logged in successfully");
+        System.out.println("  Device 2 logged in successfully");
         
-        // Step 4: Join household with all 3 accounts
-        log.info("--- Step 4: All users join the household ---");
-        
-        // Owner joins household
-        String ownerJoinMutation = String.format(
-          """
-          {
-              "query": "mutation { joinHousehold(nickname: \\"%s\\", avatarName: \\"%s\\", avatarColorName: \\"%s\\", joinCode: \\"%s\\") { nickname avatar { name colorName colorHex } } }"
-          }
-          """, "HomeOwner", "cat", "blue", joinCode
-        );
-        
-        MvcResult ownerJoinResult = mockMvc.perform(post("/graphql")
-            .header("Authorization", "Bearer " + ownerTokens.accessToken())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(ownerJoinMutation))
-          .andExpect(status().isOk())
-          .andReturn();
-        
-        log.info("✓ Owner joined household");
-        log.info("  Response: {}", ownerJoinResult.getResponse().getContentAsString());
+        // Step 4: Join household with all accounts
+        System.out.println("--- Step 4: All users join the household ---");
         
         // Device 1 user joins household
         String device1JoinMutation = String.format(
@@ -233,8 +212,8 @@ class HouseholdIntegrationTest {
           .andExpect(status().isOk())
           .andReturn();
         
-        log.info("✓ Device User 1 joined household");
-        log.info("  Response: {}", device1JoinResult.getResponse().getContentAsString());
+        System.out.println("✓ Device User 1 joined household");
+        System.out.println("  Response: " + device1JoinResult.getResponse().getContentAsString());
         
         // Device 2 user joins household
         String device2JoinMutation = String.format(
@@ -252,11 +231,11 @@ class HouseholdIntegrationTest {
           .andExpect(status().isOk())
           .andReturn();
         
-        log.info("✓ Device User 2 joined household");
-        log.info("  Response: {}", device2JoinResult.getResponse().getContentAsString());
+        System.out.println("✓ Device User 2 joined household");
+        System.out.println("  Response: " + device2JoinResult.getResponse().getContentAsString());
         
         // Step 5: Print comprehensive information
-        log.info("--- Step 5: Printing comprehensive household information ---");
+        System.out.println("--- Step 5: Printing comprehensive household information ---");
         
         // Get household info using the test endpoint
         String householdInfoQuery = String.format(
@@ -279,27 +258,27 @@ class HouseholdIntegrationTest {
         String householdInfo = (String) ((Map<String, Object>) infoGraphqlResponse.get("data")).get(
           "householdInfo");
         
-        log.info("\n=== HOUSEHOLD COMPLETE INFO ===");
-        log.info(householdInfo);
+        System.out.println("\n=== HOUSEHOLD COMPLETE INFO ===");
+        System.out.println(householdInfo);
         
         // Verify with direct database queries
-        log.info("\n=== DATABASE VERIFICATION ===");
+        System.out.println("\n=== DATABASE VERIFICATION ===");
         
         Household household = householdRepository.findById(householdId).orElseThrow();
-        log.info("Household from DB: {}", household);
+        System.out.println("Household from DB: " + household);
         
         List<Profile> profiles = profileRepository.findAllByHouseholdId(householdId);
-        log.info("\nTotal Users in Household: {}", profiles.size());
+        System.out.println("\nTotal Users in Household: " + profiles.size());
         
         for (Profile profile : profiles) {
             Account account = profile.getAccount();
-            log.info("\nUser Profile:");
-            log.info("  User ID: {}", profile.getId());
-            log.info("  Nickname: {}", profile.getNickname());
-            log.info("  Avatar: {} ({})", profile.getAvatarName(), profile.getAvatarColorName());
-            log.info("  Account ID: {}", account.getId());
-            log.info("  Account Email: {}", account.getEmail());
-            log.info("  Auth Provider: {}", account.getAuthProvider());
+            System.out.println("\nUser Profile:");
+            System.out.println("  User ID: " + profile.getId());
+            System.out.println("  Nickname: " + profile.getNickname());
+            System.out.println("  Avatar: " + profile.getAvatarName() + " (" + profile.getAvatarColorName() + ")");
+            System.out.println("  Account ID: " + account.getId());
+            System.out.println("  Account Email: " + account.getEmail());
+            System.out.println("  Auth Provider: " + account.getAuthProvider());
             // Safely access lazy-loaded devices collection
             String devicesInfo;
             try {
@@ -308,11 +287,11 @@ class HouseholdIntegrationTest {
             } catch (Exception e) {
                 devicesInfo = "<not loaded>";
             }
-            log.info("  Devices: {}", devicesInfo);
+            System.out.println("  Devices: " + devicesInfo);
         }
         
         // Assertions
-        log.info("\n=== RUNNING ASSERTIONS ===");
+        System.out.println("\n=== RUNNING ASSERTIONS ===");
         
         assertEquals(3, profiles.size(), "Should have 3 users in household");
         assertEquals(householdName, household.getName(), "Household name should match");
@@ -334,8 +313,8 @@ class HouseholdIntegrationTest {
           .toList();
         assertEquals(3, avatarCombos.size(), "Should have 3 unique avatar combinations");
         
-        log.info("\n✓ All assertions passed!");
-        log.info("\n=== Integration Test Completed Successfully ===");
+        System.out.println("\n✓ All assertions passed!");
+        System.out.println("\n=== Integration Test Completed Successfully ===");
     }
 }
 
