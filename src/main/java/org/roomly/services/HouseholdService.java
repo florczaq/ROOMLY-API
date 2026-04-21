@@ -22,6 +22,8 @@ public class HouseholdService {
     private final HouseholdRepository houseHoldRepository;
     private final ProfileRepository profileRepository;
     private final AuthenticationService authenticationService;
+    private final ShoppingListService shoppingListService;
+    private final InventoryService inventoryService;
     
     public HouseholdDTO getHousehold (String householdId) {
         return houseHoldRepository
@@ -64,9 +66,20 @@ public class HouseholdService {
             .setOwner(ownerProfile)
         );
         
-        // Update the owner profile with the household reference
+        //Update owner profile with the household
         ownerProfile.setHousehold(household);
         profileRepository.save(ownerProfile);
+        
+        //Shopping list for the household (shared)
+        shoppingListService.createShoppingList(null, household);
+        //Shopping list for the owner profile
+        shoppingListService.createShoppingList(ownerProfile, household);
+        
+        //Inventory for the household (shared)
+        inventoryService.createInventory(null, household);
+        //Inventory for the owner profile
+        inventoryService.createInventory(ownerProfile, household);
+        
         
         log.info(household.toString());
         return household.toDTO();

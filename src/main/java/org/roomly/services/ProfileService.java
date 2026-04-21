@@ -23,16 +23,27 @@ public class ProfileService {
     private final ColorsService colorsService;
     private final HouseholdService householdService;
     private final AuthenticationService authenticationService;
+    private final ShoppingListService shoppingListService;
+    private final InventoryService inventoryService;
     
     public UserDTO joinHousehold (String nickname, String avatarName, String avatarColorName, String joinCode) {
         Account account = getCurrentlyAuthenticatedAccount();
         log.info("User {} is attempting to join household with join code {}", account.getId(), joinCode);
+        
         Household household = householdService.getHouseHoldByJoinCode(joinCode);
-        log.info("Account {} is trying to join household {} with nickname '{}', avatar name '{}' and avatar color '{}'",
-          account.getId(), household.getId(), nickname, avatarName, avatarColorName);
+        log.info(
+          "Account {} is trying to join household {} with nickname '{}', avatar name '{}' and avatar color '{}'",
+          account.getId(), household.getId(), nickname, avatarName, avatarColorName
+        );
+        
         validateJoinHousehold(account, household, nickname, avatarName, avatarColorName);
         
         Profile savedProfile = createAndSaveUser(nickname, avatarName, avatarColorName, account, household);
+        
+        //Shopping list for new user
+        shoppingListService.createShoppingList(savedProfile, household);
+        //Inventory for new user
+        inventoryService.createInventory(savedProfile, household);
         
         return buildUserDTO(savedProfile);
     }

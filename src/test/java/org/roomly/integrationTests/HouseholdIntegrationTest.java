@@ -4,9 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.roomly.entities.Household;
+import org.roomly.entities.Inventory;
 import org.roomly.entities.Profile;
+import org.roomly.entities.ShoppingList;
 import org.roomly.repositories.HouseholdRepository;
+import org.roomly.repositories.InventoryRepository;
 import org.roomly.repositories.ProfileRepository;
+import org.roomly.repositories.ShoppingListRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.jwt.dto.TokenResponse;
 import org.roomly.security.authentication.repositories.AccountRepository;
@@ -47,6 +51,12 @@ class HouseholdIntegrationTest {
     @Autowired
     private ProfileRepository profileRepository;
     
+    @Autowired
+    private InventoryRepository inventoryRepository;
+    
+    @Autowired
+    private ShoppingListRepository shoppingListRepository;
+    
     @BeforeEach
     void setUp () {
         // Set up MockMvc with security
@@ -59,6 +69,8 @@ class HouseholdIntegrationTest {
         profileRepository.deleteAll();
         householdRepository.deleteAll();
         accountRepository.deleteAll();
+        inventoryRepository.deleteAll();
+        shoppingListRepository.deleteAll();
     }
     
     @Test
@@ -131,6 +143,41 @@ class HouseholdIntegrationTest {
         System.out.println("  Name: " + householdData.get("name"));
         System.out.println("  Join Code: " + joinCode);
         System.out.println("  Members Limit: " + householdData.get("membersLimit"));
+        
+        // Verify inventories and shopping lists were created for household owner
+        Household household = householdRepository.findById(householdId).orElseThrow();
+        List<Inventory> inventories = inventoryRepository.findAllByHousehold(household);
+        List<ShoppingList> shoppingLists = shoppingListRepository.findAllByHousehold(household);
+        
+        System.out.println("--- Verifying Inventories and Shopping Lists after Household Creation ---");
+        System.out.println("  Total Inventories: " + inventories.size());
+        System.out.println("  Total Shopping Lists: " + shoppingLists.size());
+        
+        // Should have 2 inventories: 1 shared (owner=null) and 1 for owner
+        assertEquals(2, inventories.size(), "Should have 2 inventories after household creation (shared + owner)");
+        
+        // Should have 2 shopping lists: 1 shared (owner=null) and 1 for owner
+        assertEquals(2, shoppingLists.size(), "Should have 2 shopping lists after household creation (shared + owner)");
+        
+        // Verify one inventory is shared
+        long sharedInventories = inventories.stream().filter(inv -> inv.getOwner() == null).count();
+        assertEquals(1, sharedInventories, "Should have 1 shared inventory");
+        System.out.println("  ✓ 1 shared inventory verified");
+        
+        // Verify one inventory belongs to owner
+        long ownerInventories = inventories.stream().filter(inv -> inv.getOwner() != null).count();
+        assertEquals(1, ownerInventories, "Should have 1 owner inventory");
+        System.out.println("  ✓ 1 owner inventory verified");
+        
+        // Verify one shopping list is shared
+        long sharedShoppingLists = shoppingLists.stream().filter(sl -> sl.getOwner() == null).count();
+        assertEquals(1, sharedShoppingLists, "Should have 1 shared shopping list");
+        System.out.println("  ✓ 1 shared shopping list verified");
+        
+        // Verify one shopping list belongs to owner
+        long ownerShoppingLists = shoppingLists.stream().filter(sl -> sl.getOwner() != null).count();
+        assertEquals(1, ownerShoppingLists, "Should have 1 owner shopping list");
+        System.out.println("  ✓ 1 owner shopping list verified");
         
         // Step 3: Create 2 users with device authentication
         System.out.println("--- Step 3: Creating 2 device accounts ---");
@@ -215,6 +262,19 @@ class HouseholdIntegrationTest {
         System.out.println("✓ Device User 1 joined household");
         System.out.println("  Response: " + device1JoinResult.getResponse().getContentAsString());
         
+        // Verify inventory and shopping list were created for Device User 1
+        List<Inventory> inventoriesAfterMember1 = inventoryRepository.findAllByHousehold(household);
+        List<ShoppingList> shoppingListsAfterMember1 = shoppingListRepository.findAllByHousehold(household);
+        
+        System.out.println("  Total Inventories after Member 1: " + inventoriesAfterMember1.size());
+        System.out.println("  Total Shopping Lists after Member 1: " + shoppingListsAfterMember1.size());
+        
+        // Should now have 3 inventories: shared + owner + member1
+        assertEquals(3, inventoriesAfterMember1.size(), "Should have 3 inventories after member 1 joins");
+        // Should now have 3 shopping lists: shared + owner + member1
+        assertEquals(3, shoppingListsAfterMember1.size(), "Should have 3 shopping lists after member 1 joins");
+        System.out.println("  ✓ Inventory and shopping list created for Device User 1");
+        
         // Device 2 user joins household
         String device2JoinMutation = String.format(
           """
@@ -233,6 +293,19 @@ class HouseholdIntegrationTest {
         
         System.out.println("✓ Device User 2 joined household");
         System.out.println("  Response: " + device2JoinResult.getResponse().getContentAsString());
+        
+        // Verify inventory and shopping list were created for Device User 2
+        List<Inventory> inventoriesAfterMember2 = inventoryRepository.findAllByHousehold(household);
+        List<ShoppingList> shoppingListsAfterMember2 = shoppingListRepository.findAllByHousehold(household);
+        
+        System.out.println("  Total Inventories after Member 2: " + inventoriesAfterMember2.size());
+        System.out.println("  Total Shopping Lists after Member 2: " + shoppingListsAfterMember2.size());
+        
+        // Should now have 4 inventories: shared + owner + member1 + member2
+        assertEquals(4, inventoriesAfterMember2.size(), "Should have 4 inventories after member 2 joins");
+        // Should now have 4 shopping lists: shared + owner + member1 + member2
+        assertEquals(4, shoppingListsAfterMember2.size(), "Should have 4 shopping lists after member 2 joins");
+        System.out.println("  ✓ Inventory and shopping list created for Device User 2");
         
         // Step 5: Print comprehensive information
         System.out.println("--- Step 5: Printing comprehensive household information ---");
@@ -264,7 +337,6 @@ class HouseholdIntegrationTest {
         // Verify with direct database queries
         System.out.println("\n=== DATABASE VERIFICATION ===");
         
-        Household household = householdRepository.findById(householdId).orElseThrow();
         System.out.println("Household from DB: " + household);
         
         List<Profile> profiles = profileRepository.findAllByHouseholdId(householdId);
@@ -290,6 +362,28 @@ class HouseholdIntegrationTest {
             System.out.println("  Devices: " + devicesInfo);
         }
         
+        // Display all inventories and shopping lists
+        List<Inventory> allInventories = inventoryRepository.findAllByHousehold(household);
+        List<ShoppingList> allShoppingLists = shoppingListRepository.findAllByHousehold(household);
+        
+        System.out.println("\n=== INVENTORIES SUMMARY ===");
+        System.out.println("Total Inventories: " + allInventories.size());
+        for (Inventory inventory : allInventories) {
+            String ownerInfo = inventory.getOwner() != null
+                ? inventory.getOwner().getNickname() + " (ID: " + inventory.getOwner().getId() + ")"
+                : "SHARED";
+            System.out.println("  - Inventory ID: " + inventory.getId() + ", Owner: " + ownerInfo);
+        }
+        
+        System.out.println("\n=== SHOPPING LISTS SUMMARY ===");
+        System.out.println("Total Shopping Lists: " + allShoppingLists.size());
+        for (ShoppingList shoppingList : allShoppingLists) {
+            String ownerInfo = shoppingList.getOwner() != null
+                ? shoppingList.getOwner().getNickname() + " (ID: " + shoppingList.getOwner().getId() + ")"
+                : "SHARED";
+            System.out.println("  - Shopping List ID: " + shoppingList.getId() + ", Owner: " + ownerInfo);
+        }
+        
         // Assertions
         System.out.println("\n=== RUNNING ASSERTIONS ===");
         
@@ -313,7 +407,27 @@ class HouseholdIntegrationTest {
           .toList();
         assertEquals(3, avatarCombos.size(), "Should have 3 unique avatar combinations");
         
+        // Final assertions for inventories and shopping lists
+        assertEquals(4, allInventories.size(), "Should have 4 inventories total (shared + 3 members)");
+        assertEquals(4, allShoppingLists.size(), "Should have 4 shopping lists total (shared + 3 members)");
+        
+        // Verify exactly 1 shared inventory and 3 member inventories
+        long finalSharedInventories = allInventories.stream().filter(inv -> inv.getOwner() == null).count();
+        long finalMemberInventories = allInventories.stream().filter(inv -> inv.getOwner() != null).count();
+        assertEquals(1, finalSharedInventories, "Should have 1 shared inventory");
+        assertEquals(3, finalMemberInventories, "Should have 3 member inventories");
+        
+        // Verify exactly 1 shared shopping list and 3 member shopping lists
+        long finalSharedShoppingLists = allShoppingLists.stream().filter(sl -> sl.getOwner() == null).count();
+        long finalMemberShoppingLists = allShoppingLists.stream().filter(sl -> sl.getOwner() != null).count();
+        assertEquals(1, finalSharedShoppingLists, "Should have 1 shared shopping list");
+        assertEquals(3, finalMemberShoppingLists, "Should have 3 member shopping lists");
+        
         System.out.println("\n✓ All assertions passed!");
+        System.out.println("  ✓ Household structure verified");
+        System.out.println("  ✓ User profiles verified");
+        System.out.println("  ✓ Inventories verified (1 shared + 3 member = 4 total)");
+        System.out.println("  ✓ Shopping lists verified (1 shared + 3 member = 4 total)");
         System.out.println("\n=== Integration Test Completed Successfully ===");
     }
 }
