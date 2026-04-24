@@ -471,6 +471,17 @@ class HouseholdIntegrationTest {
         System.out.println("\n=== COMPLETE HOUSEHOLD DATA (JSON FORMAT) ===");
         
         // Build JSON structure with all data nested under household
+        Map<String, Object> sharedInventoryData = household.getSharedInventory() != null ? Map.of(
+          "id", household.getSharedInventory().getId(),
+          "householdId", household.getId()
+        ) : Map.of("status", "N/A");
+        
+        Map<String, Object> sharedShoppingListData = household.getSharedShoppingList() != null ? Map.of(
+          "id", household.getSharedShoppingList().getId(),
+          "householdId", household.getId(),
+          "itemsCount", household.getSharedShoppingList().getItems().size()
+        ) : Map.of("status", "N/A");
+        
         Map<String, Object> householdJson = Map.of(
           "household", Map.of(
             "id", household.getId(),
@@ -478,17 +489,22 @@ class HouseholdIntegrationTest {
             "joinCode", household.getJoinCode(),
             "membersLimit", household.getMembersLimit(),
             "currentMembers", profiles.size(),
-            "sharedInventory", household.getSharedInventory() != null ? Map.of(
-              "id", household.getSharedInventory().getId(),
-              "householdId", household.getSharedInventory().getHousehold().getId()
-            ) : "N/A",
-            "sharedShoppingList", household.getSharedShoppingList() != null ? Map.of(
-              "id", household.getSharedShoppingList().getId(),
-              "householdId", household.getSharedShoppingList().getHousehold().getId(),
-              "itemsCount", household.getSharedShoppingList().getItems().size()
-            ) : "N/A",
+            "sharedInventory", sharedInventoryData,
+            "sharedShoppingList", sharedShoppingListData,
             "members", profiles.stream().map(profile -> {
                 Account account = profile.getAccount();
+                
+                Map<String, Object> inventoryData = profile.getInventory() != null ? Map.of(
+                  "id", profile.getInventory().getId(),
+                  "householdId", profile.getHousehold().getId()
+                ) : Map.of("status", "N/A");
+                
+                Map<String, Object> shoppingListData = profile.getShoppingList() != null ? Map.of(
+                  "id", profile.getShoppingList().getId(),
+                  "householdId", profile.getHousehold().getId(),
+                  "itemsCount", profile.getShoppingList().getItems().size()
+                ) : Map.of("status", "N/A");
+                
                 return Map.of(
                   "profileId", profile.getId(),
                   "nickname", profile.getNickname(),
@@ -497,15 +513,8 @@ class HouseholdIntegrationTest {
                     "colorName", profile.getAvatarColorName(),
                     "colorHex", Objects.requireNonNull(ColorsService.getHexByColor(profile.getAvatarColorName()))
                   ),
-                  "inventory", profile.getInventory() != null ? Map.of(
-                    "id", profile.getInventory().getId(),
-                    "householdId", profile.getInventory().getHousehold().getId()
-                  ) : "N/A",
-                  "shoppingList", profile.getShoppingList() != null ? Map.of(
-                    "id", profile.getShoppingList().getId(),
-                    "householdId", profile.getShoppingList().getHousehold().getId(),
-                    "itemsCount", profile.getShoppingList().getItems().size()
-                  ) : "N/A",
+                  "inventory", inventoryData,
+                  "shoppingList", shoppingListData,
                   "account", Map.of(
                     "id", account.getId(),
                     "email", account.getEmail() != null ? account.getEmail() : "N/A",

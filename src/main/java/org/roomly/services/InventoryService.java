@@ -20,11 +20,7 @@ public class InventoryService {
     }
     
     public Inventory createInventory (@Nullable Profile user, @NotNull Household household) {
-        return inventoryRepository.save(
-          new Inventory()
-            .setHousehold(household)
-            .setOwner(user)
-        );
+        return inventoryRepository.save(new Inventory().setOwner(user));
     }
     
     public String updateInventory () {

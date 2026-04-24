@@ -15,16 +15,10 @@ import org.roomly.dto.InventoryDTO;
 @Getter
 @Setter
 @Accessors(chain = true)
-@SuppressWarnings("JpaDataSourceORMInspection")
 public class Inventory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
-    
-    
-    @ManyToOne
-    @JoinColumn(name = "household_id", nullable = false)
-    Household household;
     
     /*
      * Each inventory is owned by a single user
@@ -36,9 +30,10 @@ public class Inventory {
     Profile owner;
     
     public InventoryDTO toDTO () {
+        String householdId = owner != null ? owner.getHousehold().getId() : null;
         return new InventoryDTO(
           id,
-          household.getId()
+          householdId
         );
     }
     

@@ -17,15 +17,10 @@ import java.util.List;
 @Getter
 @Setter
 @Accessors(chain = true)
-@SuppressWarnings("JpaDataSourceORMInspection")
 public class ShoppingList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
-    
-    @ManyToOne
-    @JoinColumn(name = "household_id", nullable = false)
-    Household household;
     
     /**
      * Each shopping list is owned by a single user
@@ -40,9 +35,10 @@ public class ShoppingList {
     List<ShoppingListItem> items = new ArrayList<>();
     
     public ShoppingListDTO toDTO () {
+        String householdId = owner != null ? owner.getHousehold().getId() : null;
         return new ShoppingListDTO(
           id,
-          household.getId(),
+          householdId,
           items.stream().map(ShoppingListItem::toDTO).toList()
         );
     }

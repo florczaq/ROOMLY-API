@@ -42,11 +42,7 @@ public class ShoppingListService {
     
     @Transactional
     public ShoppingList createShoppingList (@Nullable Profile profile, @NotNull Household household) {
-        return shoppingListRepository.save(
-          new ShoppingList()
-            .setHousehold(household)
-            .setOwner(profile)
-        );
+        return shoppingListRepository.save(new ShoppingList().setOwner(profile));
     }
     
     @Transactional
