@@ -13,7 +13,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "unchecked"})
+
 public class ColorsService {
     
     private static Map<String, String> hexToColor = new HashMap<>();

@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 /**
- * Orchestrates complex multi-service workflows that span multiple domains.
+ * Orchestrates complex multiservice workflows that span multiple domains.
  * Keeps individual services focused on single responsibilities while
  * managing coordination and transactional boundaries.
  */

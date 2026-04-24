@@ -27,9 +27,6 @@ public class Product {
     
     String quantity;
     
-    //    @Enumerated(EnumType.STRING)
-    //    QuantityUnits unit;
-    
     @Column(unique = true)
     String barcode;
     

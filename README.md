@@ -193,7 +193,7 @@ type Query {
     householdInfo(householdId: String!): String!
     
     # Search for products by barcode
-    products(barcode: String!, key: String): ProductDetails!
+    products(barcode: String!, key: String): Product!
     
     # Get available avatars and colors
     availableAvatarsAndColors: AvatarsAndColors!
@@ -219,7 +219,7 @@ type Mutation {
         avatarName: String!
         avatarColorName: String!
         joinCode: String!
-    ): User!
+    ): Profile!
 }
 ```
 
@@ -317,20 +317,31 @@ query {
 }
 ```
 
-#### Search Product by Barcode
+[//]: # (#### Search Product by Barcode)
 
-```graphql
-query {
-    products(barcode: "3017620422003") {
-        barcode
-        name
-        brand
-        quantity
-    }
-}
-```
+[//]: # ()
+[//]: # (```graphql)
 
----
+[//]: # (query {)
+
+[//]: # (    products&#40;barcode: "3017620422003"&#41; {)
+
+[//]: # (        barcode)
+
+[//]: # (        name)
+
+[//]: # (        brand)
+
+[//]: # (        quantity)
+
+[//]: # (    })
+
+[//]: # (})
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (---)
 
 ## 🗄️ Database Schema
 
@@ -343,13 +354,13 @@ query {
 4. **RefreshToken** - JWT refresh tokens
 
 #### Feature Entities
-5. **ShoppingList** - Shopping lists (personal/shared)
-6. **ShoppingListItem** - Items in shopping lists
-7. **Product** - Product catalog
-8. **Inventory** - Inventory management (personal/shared)
-9. **Event** - Calendar events with attendees
-10. **Transaction** - Financial transactions between profiles
-11. **Notification** - User notifications (basic implementation)
+1. **ShoppingList** - Shopping lists (personal/shared)
+2. **ShoppingListItem** - Items in shopping lists
+3. **Product** - Product catalog
+4. **Inventory** - Inventory management (personal/shared)
+5. **Event** - Calendar events with attendees
+6. **Transaction** - Financial transactions between profiles
+7. **Notification** - User notifications (basic implementation)
 
 ### Entity Details
 
@@ -735,7 +746,7 @@ Contributions are welcome! Please follow these steps:
 - Follow Java naming conventions
 - Use Lombok annotations for boilerplate code
 - Write unit tests for new features
-- Document public APIs with JavaDoc
+- Document public APIs with Javadoc
 - Keep methods small and focused
 
 ---
@@ -774,16 +785,16 @@ For questions and support, please open an issue on GitHub.
 
 ### Implementation Status
 
-| Feature | Status | API Exposed |
-|---------|--------|-------------|
-| Household Management | ✅ Complete | ✅ Yes |
-| Profile & Avatars | ✅ Complete | ✅ Yes |
-| Product Lookup | ✅ Complete | ✅ Yes |
-| Shopping Lists | 🏗️ Backend Ready | ❌ No |
-| Inventory | 🏗️ Backend Ready | ❌ No |
-| Events | 🏗️ Backend Ready | ❌ No |
-| Transactions | 🏗️ Backend Ready | ❌ No |
-| Notifications | 🚧 Partial | ❌ No |
+| Feature              | Status            | API Exposed |
+|----------------------|-------------------|-------------|
+| Household Management | ✅ Complete        | ✅ Yes       |
+| Profile & Avatars    | ✅ Complete        | ✅ Yes       |
+| Product Lookup       | ✅ Complete        | ✅ Yes       |
+| Shopping Lists       | 🏗️ Backend Ready | ❌ No        |
+| Inventory            | 🏗️ Backend Ready | ❌ No        |
+| Events               | 🏗️ Backend Ready | ❌ No        |
+| Transactions         | 🏗️ Backend Ready | ❌ No        |
+| Notifications        | 🚧 Partial        | ❌ No        |
 
 ---
 

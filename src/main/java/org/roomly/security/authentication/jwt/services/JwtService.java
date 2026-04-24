@@ -43,6 +43,7 @@ public class JwtService {
         return createToken(uuid, tokenType);
     }
     
+    @SuppressWarnings("all")
     public boolean validateToken (String token, TokenType expectedType) {
         try {
             //If token is invalid, extracting claims will throw an exception

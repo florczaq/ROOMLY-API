@@ -15,18 +15,15 @@ import java.util.Objects;
 @Slf4j
 @Service
 public class AvatarService {
-    private final ColorsService colorsService;
     private final String _storagePath;
     private final String[] supportedExtensions = new String[]{"png", "jpg"};
     private final String _catalogName;
     
     public AvatarService (
-      ColorsService colorsService,
       @Value("${avatar.storage.path}") String storagePath,
       @Value("${avatar.storage.filename}") String catalogName
     ) {
         this._storagePath = storagePath;
-        this.colorsService = colorsService;
         this._catalogName = catalogName;
     }
     
@@ -61,9 +58,9 @@ public class AvatarService {
     
     public byte[] loadAvatarFromStorage (String name, String color) {
         if (color.contains("#")) {
-            color = colorsService.getColorByHex(color);
+            color = ColorsService.getColorByHex(color);
             if (color == null) {
-                throw new RuntimeException("Color not found for hex: " + color);
+                throw new IllegalArgumentException("Invalid color hex code");
             }
         }
         String normalizedColor = color.toUpperCase();

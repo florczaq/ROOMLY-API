@@ -16,12 +16,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AvatarsResolver {
     private final AvatarService avatarService;
-    private final ColorsService colorsService;
     
     @QueryMapping
     public AvailableAvatarsAndColorsDTO availableAvatarsAndColors () {
         List<String> avatars = avatarService.getAvailableAvatarsFromCatalog();
-        Map<String, String> colorsMap = colorsService.getAllColors();
+        Map<String, String> colorsMap = ColorsService.getAllColors();
         
         // Convert Map to List of ColorDTO
         List<ColorDTO> colors = colorsMap.entrySet().stream()
