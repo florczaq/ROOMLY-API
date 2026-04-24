@@ -15,9 +15,13 @@ import java.util.Optional;
 public interface ShoppingListRepository extends JpaRepository<ShoppingList, String> {
     
     @Query("SELECT s FROM ShoppingList s LEFT JOIN s.owner p LEFT JOIN Household h ON (h.sharedShoppingList = s OR p.household = h) WHERE h = :household")
-    List<ShoppingList> findAllByHousehold(@Param("household") Household household);
+    List<ShoppingList> findAllByHousehold (@Param("household") Household household);
     
     @Query("SELECT s FROM ShoppingList s LEFT JOIN s.owner p LEFT JOIN Household h ON (h.sharedShoppingList = s OR p.household = h) WHERE h = :household AND (s.owner = :owner OR (:owner IS NULL AND s.owner IS NULL))")
-    Optional<ShoppingList> getShoppingListByHouseholdAndOwner(@Param("household") Household household, @Param("owner") Profile owner);
+    Optional<ShoppingList> getShoppingListByHouseholdAndOwner (@Param("household") Household household,
+      @Param("owner") Profile owner
+    );
+    
+    Optional<ShoppingList> getShoppingListById (int id);
 }
 

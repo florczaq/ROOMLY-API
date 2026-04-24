@@ -27,6 +27,14 @@ type Mutation {
     #=== HOUSEHOLD ===
     createHousehold(name: String!, membersLimit: Int!, nickname: String!, avatarName: String!, avatarColorName: String! ): Household!
     joinHousehold(nickname: String!, avatarName: String!, avatarColorName: String!, joinCode: String!): Profile!
+
+    #=== PROFILE ===
+    #=== SHOPPING LIST ===
+    #=== INVENTORY ===
+    #===AVATARS AND COLORS ===
+    #=== EVENTS ===
+    #=== TRANSACTIONS ===
+    addTransaction(title: String!, amount: Float!, recipientId: String!, type: String!): Transaction!
 }
 
 #=== ENTITIES ===

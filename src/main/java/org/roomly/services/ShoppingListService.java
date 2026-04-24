@@ -25,17 +25,16 @@ public class ShoppingListService {
      * Gets a shopping list for a household and optional owner.
      * Caller is responsible for fetching the household and determining the owner.
      */
-    public ShoppingListDTO getShoppingList(@NotNull Household household, @Nullable Profile owner) {
-        ShoppingList shoppingList = shoppingListRepository.getShoppingListByHouseholdAndOwner(household, owner)
+    public ShoppingList getShoppingList (int id) {
+        return shoppingListRepository.getShoppingListById(id)
           .orElseThrow(() -> new EntityNotFoundException("Shopping list not found"));
-        return shoppingList.toDTO();
     }
     
     /**
      * Gets all shopping lists for a household.
      * Caller is responsible for fetching the household.
      */
-    public List<ShoppingListDTO> getAllShoppingLists(@NotNull Household household) {
+    public List<ShoppingListDTO> getAllShoppingLists (@NotNull Household household) {
         List<ShoppingList> shoppingLists = shoppingListRepository.findAllByHousehold(household);
         return shoppingLists.stream().map(ShoppingList::toDTO).toList();
     }

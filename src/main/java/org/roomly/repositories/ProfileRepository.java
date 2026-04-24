@@ -24,4 +24,6 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     List<Profile> findAllByHouseholdId (String householdId);
     
     Optional<Profile> findByHouseholdAndAccount (Household household, Account account);
+    
+    Optional<Profile> findProfileById (String id);
 }

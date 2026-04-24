@@ -9,21 +9,6 @@ import org.springframework.stereotype.Controller;
 public class EventsResolver {
     private final EventsService eventsService;
     
-    public String events () {
-        return "EventsResolver";
-    }
-    
-    public String addEvents () {
-        return "EventsResolver";
-    }
-    
-    public String updateEvents () {
-        return "EventsResolver";
-    }
-    
-    public String deleteEvents () {
-        return "EventsResolver";
-    }
-    
+
 }
 
