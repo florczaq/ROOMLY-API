@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.roomly.dto.ShoppingListDTO;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -32,18 +33,16 @@ public class ShoppingList {
      * If owner is null, shopping list is considered
      * shared and can be accessed by all household members.
      */
-    @OneToOne
-    @JoinColumn(name = "owner_id")
+    @OneToOne(mappedBy = "shoppingList")
     Profile owner;
     
-    @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ShoppingListItem> items;
+    @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    List<ShoppingListItem> items = new ArrayList<>();
     
     public ShoppingListDTO toDTO () {
         return new ShoppingListDTO(
           id,
           household.getId(),
-          owner != null ? owner.toDTO() : null,
           items.stream().map(ShoppingListItem::toDTO).toList()
         );
     }

@@ -21,7 +21,6 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
     
-    String name;
     
     @ManyToOne
     @JoinColumn(name = "household_id", nullable = false)
@@ -33,16 +32,13 @@ public class Inventory {
      * If owner is null, inventory is considered
      * shared and can be accessed by all household members.
      */
-    @OneToOne
-    @JoinColumn(name = "owner_id")
+    @OneToOne(mappedBy = "inventory")
     Profile owner;
     
     public InventoryDTO toDTO () {
         return new InventoryDTO(
           id,
-          name,
-          household.getId(),
-          owner != null ? owner.toDTO() : null
+          household.getId()
         );
     }
     

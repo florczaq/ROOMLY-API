@@ -1,5 +1,6 @@
 package org.roomly.services;
 
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class HouseholdOrchestrationService {
     private final AuthenticationService authenticationService;
     private final HouseholdRepository householdRepository;
     private final ProfileRepository profileRepository;
+    private final EntityManager entityManager;
     
     /**
      * Creates a new household with owner profile and all necessary resources.
@@ -51,31 +53,45 @@ public class HouseholdOrchestrationService {
         
         var account = authenticationService.loadAccountById(authentication.getName());
         
-        Profile ownerProfile = profileRepository.save(
-          new Profile()
+        // Create owner profile (without saving yet)
+        Profile ownerProfile = new Profile()
             .setAccount(account)
             .setNickname(nickname)
             .setAvatarName(avatarName)
-            .setAvatarColorName(avatarColorName)
-        );
+            .setAvatarColorName(avatarColorName);
         
-        Household household = householdRepository.save(
-          new Household()
+        // Save profile first to get an ID
+        ownerProfile = profileRepository.save(ownerProfile);
+        
+        // Create household (without saving yet)
+        Household household = new Household()
             .setId(householdService.generateNewHouseholdId())
             .setName(name)
             .setMembersLimit(membersLimit)
             .setJoinCode(householdService.generateNewJoinCode())
-            .setOwner(ownerProfile)
-        );
+            .setOwner(ownerProfile);
         
+        // Save household to get it persisted (needed before creating resources)
+        household = householdRepository.save(household);
+        
+        // Update owner profile with household reference and save to persist the relationship
         ownerProfile.setHousehold(household);
-        profileRepository.save(ownerProfile);
+        ownerProfile = profileRepository.save(ownerProfile);
         
-        shoppingListService.createShoppingList(null, household);
-        inventoryService.createInventory(null, household);
+        // Create shared resources
+        var sharedShoppingList = shoppingListService.createShoppingList(null, household);
+        var sharedInventory = inventoryService.createInventory(null, household);
         
-        shoppingListService.createShoppingList(ownerProfile, household);
-        inventoryService.createInventory(ownerProfile, household);
+        // Assign shared resources to household and save once with all updates
+        household.setSharedShoppingList(sharedShoppingList);
+        household.setSharedInventory(sharedInventory);
+        household = householdRepository.save(household);
+        
+        // Create owner's personal resources and assign to profile (saves profile with all updates)
+        createAndAssignPersonalResources(ownerProfile, household);
+        
+        // Flush to ensure all changes are persisted before returning DTO
+        entityManager.flush();
         
         log.info("Created household {} with owner {}", household.getId(), ownerProfile.getId());
         return household.toDTO();
@@ -107,12 +123,27 @@ public class HouseholdOrchestrationService {
         // Create profile
         Profile savedProfile = profileService.createProfile(nickname, avatarName, avatarColorName, account, household);
         
-        // Create resources for new member
-        shoppingListService.createShoppingList(savedProfile, household);
-        inventoryService.createInventory(savedProfile, household);
+        // Create resources for new member and assign them
+        createAndAssignPersonalResources(savedProfile, household);
+        
+        // Flush to ensure all changes are persisted before returning DTO
+        entityManager.flush();
         
         log.info("Added member {} to household {}", savedProfile.getId(), household.getId());
         return savedProfile.toDTO();
+    }
+    
+    /**
+     * Creates and assigns personal resources (inventory and shopping list) to a profile.
+     * This is a helper method to avoid code duplication.
+     */
+    private void createAndAssignPersonalResources(Profile profile, Household household) {
+        var shoppingList = shoppingListService.createShoppingList(profile, household);
+        var inventory = inventoryService.createInventory(profile, household);
+        
+        profile.setShoppingList(shoppingList);
+        profile.setInventory(inventory);
+        profileRepository.save(profile);
     }
 }
 

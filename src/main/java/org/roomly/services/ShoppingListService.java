@@ -41,11 +41,11 @@ public class ShoppingListService {
     }
     
     @Transactional
-    public ShoppingList createShoppingList (@Nullable Profile user, @NotNull Household household) {
+    public ShoppingList createShoppingList (@Nullable Profile profile, @NotNull Household household) {
         return shoppingListRepository.save(
           new ShoppingList()
             .setHousehold(household)
-            .setOwner(user)
+            .setOwner(profile)
         );
     }
     

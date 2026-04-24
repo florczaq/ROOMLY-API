@@ -10,6 +10,9 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.roomly.dto.HouseholdDTO;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,6 +38,17 @@ public class Household {
     @JoinColumn(name = "owner_id", nullable = false)
     Profile owner;
     
+    @OneToMany(mappedBy = "household", fetch = FetchType.LAZY)
+    List<Profile> members = new ArrayList<>();
+    
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "shared_inventory_id")
+    Inventory sharedInventory;
+    
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "shared_shopping_list_id")
+    ShoppingList sharedShoppingList;
+    
     @Override
     public String toString () {
         return """
@@ -48,7 +62,14 @@ public class Household {
     }
     
     public HouseholdDTO toDTO () {
-        return new HouseholdDTO(id, name, joinCode, membersLimit);
+        return new HouseholdDTO(
+          id,
+          name,
+          joinCode,
+          membersLimit,
+          sharedInventory != null ? sharedInventory.toDTO() : null,
+          sharedShoppingList != null ? sharedShoppingList.toDTO() : null
+        );
     }
     
 }

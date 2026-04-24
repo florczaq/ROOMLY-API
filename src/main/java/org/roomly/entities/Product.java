@@ -8,7 +8,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.roomly.dto.ProductDTO;
 import org.roomly.enums.ProductInfoSource;
-import org.roomly.enums.QuantityUnits;
 
 @Entity
 @NoArgsConstructor
@@ -26,10 +25,10 @@ public class Product {
     @Column(nullable = false)
     String brand;
     
-    int quantity;
+    String quantity;
     
-    @Enumerated(EnumType.STRING)
-    QuantityUnits unit;
+    //    @Enumerated(EnumType.STRING)
+    //    QuantityUnits unit;
     
     @Column(unique = true)
     String barcode;
@@ -43,7 +42,7 @@ public class Product {
           barcode,
           name,
           brand,
-          quantity + " " + unit.toString().toLowerCase()
+          quantity
         );
     }
 }

@@ -39,6 +39,14 @@ public class Profile {
     @JoinColumn(name = "household_id")
     Household household;
     
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "inventory_id")
+    Inventory inventory;
+    
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "shopping_list_id")
+    ShoppingList shoppingList;
+    
     @Override
     public String toString () {
         return """
@@ -56,7 +64,9 @@ public class Profile {
         return new ProfileDTO(
           id,
           nickname,
-          new AvatarDTO(avatarName, avatarColorName, ColorsService.getHexByColor(avatarColorName))
+          new AvatarDTO(avatarName, avatarColorName, ColorsService.getHexByColor(avatarColorName)),
+          inventory != null ? inventory.toDTO() : null,
+          shoppingList != null ? shoppingList.toDTO() : null
         );
     }
 }

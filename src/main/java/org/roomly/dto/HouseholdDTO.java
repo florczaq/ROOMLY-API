@@ -1,5 +1,12 @@
 package org.roomly.dto;
 
-public record HouseholdDTO(String id, String name, String joinCode, int membersLimit) {
-    
+public record HouseholdDTO(
+  String id,
+  String name,
+  String joinCode,
+  int membersLimit,
+  InventoryDTO sharedInventory,
+  ShoppingListDTO sharedShoppingList
+) {
+
 }

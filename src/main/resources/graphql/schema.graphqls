@@ -2,12 +2,14 @@ type Query{
     household(householdId: String!): String!
     householdInfo(householdId: String!): String!
     availableAvatarsAndColors: AvatarsAndColors!
-    shoppingList(householdId: String!, shared: Boolean): [String]!
+    shoppingList(householdId: String!, shared: Boolean): ShoppingList!
+    allShoppingLists(householdId: String!): [ShoppingList]!
+
 }
 
 type Mutation {
     createHousehold(name: String!, membersLimit: Int!, nickname: String!, avatarName: String!, avatarColorName: String! ): Household!
-    joinHousehold(nickname: String!, avatarName: String!, avatarColorName: String!, joinCode: String!): User!
+    joinHousehold(nickname: String!, avatarName: String!, avatarColorName: String!, joinCode: String!): Profile!
 }
 
 type Product {
@@ -23,17 +25,16 @@ type Household {
     name: String!
     joinCode: String!
     membersLimit: Int!
-}
-
-type User {
-    nickname: String!
-    avatar: Avatar
+    sharedInventory: Inventory
+    sharedShoppingList: ShoppingList
 }
 
 type Profile {
     id: String!
     nickname: String!
     avatar: Avatar!
+    inventory: Inventory
+    shoppingList: ShoppingList
 }
 
 type Avatar {
@@ -55,7 +56,6 @@ type Color{
 type ShoppingList {
     id: Int!
     householdId: String!
-    owner: Profile
     items: [ShoppingListItem]!
 }
 
@@ -93,7 +93,6 @@ type Transaction {
 
 type Inventory {
     id: Int!
-    name: String!
     householdId: String!
     owner: Profile
 }

@@ -19,14 +19,12 @@ public class InventoryService {
         return "InventoryService";
     }
     
-    public int createInventory (@Nullable Profile user, @NotNull Household household) {
-        Inventory savedInventory =
-          inventoryRepository.save(
-            new Inventory()
-              .setHousehold(household)
-              .setOwner(user)
-          );
-        return savedInventory.getId();
+    public Inventory createInventory (@Nullable Profile user, @NotNull Household household) {
+        return inventoryRepository.save(
+          new Inventory()
+            .setHousehold(household)
+            .setOwner(user)
+        );
     }
     
     public String updateInventory () {

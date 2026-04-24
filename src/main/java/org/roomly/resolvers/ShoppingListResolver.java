@@ -11,6 +11,8 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 public class ShoppingListResolver {
@@ -27,6 +29,10 @@ public class ShoppingListResolver {
         return shoppingListService.getShoppingList(household, owner);
     }
     
-    
+    @QueryMapping
+    public List<ShoppingListDTO> allShoppingLists (@Argument String householdId) {
+        Household household = householdService.getHousehold(householdId);
+        return shoppingListService.getAllShoppingLists(household);
+    }
 }
 
