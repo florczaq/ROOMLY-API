@@ -18,6 +18,7 @@ type Query{
     #=== EVENTS ===
 
     #=== TRANSACTIONS ===
+    transactions(householdId: String!): [Transaction]!
 
     # === TEMPORARY === TODO: Remove in production, only for testing purposes
     householdInfo(householdId: String!): String!

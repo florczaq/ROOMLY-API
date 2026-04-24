@@ -58,6 +58,8 @@ public class ProfileService {
           .orElseThrow(() -> new RuntimeException("Profile not found for account: " + account.getId()));
     }
     
+    
+    
     private void validateNotAlreadyMember (Account account, Household household) {
         if (profileRepository.existsByAccountAndHousehold(account, household)) {
             throw new IllegalArgumentException("User is already a member of this household");
