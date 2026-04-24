@@ -1,6 +1,7 @@
 package org.roomly.security.authentication.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ public class Account {
     private String id;
     
     @Column(unique = true)
+    @Email(message = "Email should be valid")
     private String email;
     
     private String passwordHash;

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.roomly.security.authentication.entities.Account;
 
 @Getter
 @Entity
@@ -21,8 +22,10 @@ public class RefreshToken {
     @Setter
     @Column(name = "token", nullable = false, unique = true)
     private String token;
-    @Column(name = "userId", nullable = false)
-    private String userId;
+    
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
     
     @Column(name = "expiry_date", nullable = false)
     private long expiryDate;
