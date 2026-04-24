@@ -46,10 +46,6 @@ public class ShoppingListItem {
     @Column(name = "purchased_at")
     private LocalDateTime purchasedAt;
     
-    @ManyToOne
-    @JoinColumn(name = "added_by_user_id")
-    private Profile addedBy;
-    
     private String notes;
     
     @PrePersist

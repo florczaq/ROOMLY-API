@@ -41,10 +41,6 @@ public class InventoryItem {
     @Column(name = "added_at")
     private LocalDateTime addedAt = LocalDateTime.now();
     
-    @ManyToOne
-    @JoinColumn(name = "added_by_profile_id")
-    private Profile addedBy;
-    
     private String notes;
     
     @PrePersist
