@@ -24,6 +24,7 @@ public class Household {
     @Id
     String id;
     
+    @Column(nullable = false, length = 100)
     String name;
     
     @Column(unique = true, nullable = false, length = 6)
@@ -67,8 +68,11 @@ public class Household {
           name,
           joinCode,
           membersLimit,
+          owner != null ? owner.toDTO() : null,
+          members.stream().map(Profile::toDTO).toList(),
           sharedInventory != null ? sharedInventory.toDTO() : null,
-          sharedShoppingList != null ? sharedShoppingList.toDTO() : null
+          sharedShoppingList != null ? sharedShoppingList.toDTO() : null,
+          members.size()
         );
     }
     

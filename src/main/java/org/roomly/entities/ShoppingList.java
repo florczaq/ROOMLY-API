@@ -35,10 +35,8 @@ public class ShoppingList {
     List<ShoppingListItem> items = new ArrayList<>();
     
     public ShoppingListDTO toDTO () {
-        String householdId = owner != null ? owner.getHousehold().getId() : null;
         return new ShoppingListDTO(
           id,
-          householdId,
           items.stream().map(ShoppingListItem::toDTO).toList()
         );
     }

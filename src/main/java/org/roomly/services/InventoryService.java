@@ -1,35 +1,31 @@
 package org.roomly.services;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
-import org.roomly.entities.Household;
 import org.roomly.entities.Inventory;
 import org.roomly.entities.Profile;
 import org.roomly.repositories.InventoryRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("unused")
 public class InventoryService {
     private final InventoryRepository inventoryRepository;
     
-    public String getInventory () {
-        return "InventoryService";
+    public Inventory getInventory (int id) {
+        return inventoryRepository.findById(id)
+          .orElseThrow(() -> new EntityNotFoundException("Inventory [" + id + "] not found"));
     }
     
-    public Inventory createInventory (@Nullable Profile user, @NotNull Household household) {
+    public Inventory createInventory (@Nullable Profile user) {
         return inventoryRepository.save(new Inventory().setOwner(user));
     }
     
-    public String updateInventory () {
-        return "InventoryService";
+    public List<Inventory> getInventories (String householdId) {
+        return inventoryRepository.findAllByHouseholdId(householdId);
     }
-    
-    public String deleteInventory () {
-        return "InventoryService";
-    }
-    
 }
 

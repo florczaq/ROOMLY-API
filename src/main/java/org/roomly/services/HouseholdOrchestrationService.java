@@ -80,7 +80,7 @@ public class HouseholdOrchestrationService {
         
         // Create shared resources
         var sharedShoppingList = shoppingListService.createShoppingList(null, household);
-        var sharedInventory = inventoryService.createInventory(null, household);
+        var sharedInventory = inventoryService.createInventory(null);
         
         // Assign shared resources to household and save once with all updates
         household.setSharedShoppingList(sharedShoppingList);
@@ -139,7 +139,7 @@ public class HouseholdOrchestrationService {
      */
     private void createAndAssignPersonalResources(Profile profile, Household household) {
         var shoppingList = shoppingListService.createShoppingList(profile, household);
-        var inventory = inventoryService.createInventory(profile, household);
+        var inventory = inventoryService.createInventory(profile);
         
         profile.setShoppingList(shoppingList);
         profile.setInventory(inventory);

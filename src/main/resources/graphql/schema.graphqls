@@ -1,16 +1,35 @@
 type Query{
-    household(householdId: String!): String!
-    householdInfo(householdId: String!): String!
-    availableAvatarsAndColors: AvatarsAndColors!
-    shoppingList(householdId: String!, shared: Boolean): ShoppingList!
+    #=== HOUSEHOLD ===
+    household(householdId: String!): Household!
+
+    #=== PROFILE ===
+
+    #=== SHOPPING LIST ===
+    shoppingList(id: Int!): ShoppingList!
     allShoppingLists(householdId: String!): [ShoppingList]!
 
+    #=== INVENTORY ===
+    inventory(id: Int!): Inventory!
+    allInventories(householdId: String!): [Inventory]!
+
+    #===AVATARS AND COLORS ===
+    availableAvatarsAndColors: AvatarsAndColors!
+
+    #=== EVENTS ===
+
+    #=== TRANSACTIONS ===
+
+    # === TEMPORARY === TODO: Remove in production, only for testing purposes
+    householdInfo(householdId: String!): String!
 }
 
 type Mutation {
+    #=== HOUSEHOLD ===
     createHousehold(name: String!, membersLimit: Int!, nickname: String!, avatarName: String!, avatarColorName: String! ): Household!
     joinHousehold(nickname: String!, avatarName: String!, avatarColorName: String!, joinCode: String!): Profile!
 }
+
+#=== ENTITIES ===
 
 type Product {
     id: Int!
@@ -25,16 +44,19 @@ type Household {
     name: String!
     joinCode: String!
     membersLimit: Int!
-    sharedInventory: Inventory
-    sharedShoppingList: ShoppingList
+    owner: Profile,
+    members: [Profile]!
+    sharedInventory: Inventory!
+    sharedShoppingList: ShoppingList!
+    membersCount: Int!
 }
 
 type Profile {
     id: String!
     nickname: String!
     avatar: Avatar!
-    inventory: Inventory
-    shoppingList: ShoppingList
+    inventory: Inventory!
+    shoppingList: ShoppingList!
 }
 
 type Avatar {
@@ -55,7 +77,6 @@ type Color{
 
 type ShoppingList {
     id: Int!
-    householdId: String!
     items: [ShoppingListItem]!
 }
 
@@ -93,7 +114,15 @@ type Transaction {
 
 type Inventory {
     id: Int!
-    householdId: String!
-    owner: Profile
+    items: [InventoryItem]!
+}
+
+type InventoryItem {
+    id: Int!
+    product: Product!
+    count: Int!
+    addedAt: String!
+    addedBy: Profile!
+    notes: String
 }
 

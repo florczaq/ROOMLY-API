@@ -118,7 +118,7 @@ class HouseholdIntegrationTest {
         String createHouseholdMutation = String.format(
           """
           {
-              "query": "mutation { createHousehold(name: \\"%s\\", membersLimit: %d, nickname: \\"%s\\", avatarName: \\"%s\\", avatarColorName: \\"%s\\") { id name joinCode membersLimit sharedInventory { id householdId } sharedShoppingList { id householdId } } }"
+              "query": "mutation { createHousehold(name: \\"%s\\", membersLimit: %d, nickname: \\"%s\\", avatarName: \\"%s\\", avatarColorName: \\"%s\\") { id name joinCode membersLimit sharedInventory { id } sharedShoppingList { id } } }"
           }
           """, householdName, membersLimit, "HomeOwner", "Cat", "blue"
         );
@@ -277,9 +277,9 @@ class HouseholdIntegrationTest {
         String device1JoinMutation = String.format(
           """
           {
-              "query": "mutation { joinHousehold(nickname: \\"%s\\", avatarName: \\"%s\\", avatarColorName: \\"%s\\", joinCode: \\"%s\\") { nickname avatar { name colorName colorHex } } }"
+              "query": "mutation { joinHousehold(nickname: \\"%s\\", avatarName: \\"%s\\", avatarColorName: \\"%s\\", joinCode: \\"%s\\") { nickname avatar { name colorName colorHex } inventory { id } shoppingList { id } } }"
           }
-          """, "DeviceUser1", "dog", "red", joinCode
+          """, "DeviceUser1", "Dog", "white", joinCode
         );
         
         MvcResult device1JoinResult = mockMvc.perform(post("/graphql")
@@ -309,7 +309,7 @@ class HouseholdIntegrationTest {
         String device2JoinMutation = String.format(
           """
           {
-              "query": "mutation { joinHousehold(nickname: \\"%s\\", avatarName: \\"%s\\", avatarColorName: \\"%s\\", joinCode: \\"%s\\") { nickname avatar { name colorName colorHex } inventory { id householdId } shoppingList { id householdId } } }"
+              "query": "mutation { joinHousehold(nickname: \\"%s\\", avatarName: \\"%s\\", avatarColorName: \\"%s\\", joinCode: \\"%s\\") { nickname avatar { name colorName colorHex } inventory { id } shoppingList { id } } }"
           }
           """, "DeviceUser2", "Fox", "green", joinCode
         );

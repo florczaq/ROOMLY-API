@@ -9,6 +9,9 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.roomly.dto.InventoryDTO;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,7 +23,7 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
     
-    /*
+    /**
      * Each inventory is owned by a single user
      * and a user can own one inventory.
      * If owner is null, inventory is considered
@@ -29,11 +32,13 @@ public class Inventory {
     @OneToOne(mappedBy = "inventory")
     Profile owner;
     
+    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    List<InventoryItem> items = new ArrayList<>();
+    
     public InventoryDTO toDTO () {
-        String householdId = owner != null ? owner.getHousehold().getId() : null;
         return new InventoryDTO(
           id,
-          householdId
+          items.stream().map(InventoryItem::toDTO).toList()
         );
     }
     

@@ -1,8 +1,10 @@
 package org.roomly.dto;
 
+import java.util.List;
+
 public record InventoryDTO(
   int id,
-  String householdId
+  List<InventoryItemDTO> items
 ) {
 }
 

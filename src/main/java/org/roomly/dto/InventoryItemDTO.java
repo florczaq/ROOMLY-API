@@ -2,13 +2,11 @@ package org.roomly.dto;
 
 import java.time.LocalDateTime;
 
-public record ShoppingListItemDTO(
+public record InventoryItemDTO(
   int id,
   ProductDTO product,
   int count,
-  boolean purchased,
   LocalDateTime addedAt,
-  LocalDateTime purchasedAt,
   String notes
 ) {
 }

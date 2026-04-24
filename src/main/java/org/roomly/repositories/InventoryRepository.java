@@ -13,6 +13,9 @@ import java.util.List;
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     
     @Query("SELECT i FROM Inventory i LEFT JOIN i.owner p LEFT JOIN Household h ON (h.sharedInventory = i OR p.household = h) WHERE h = :household")
-    List<Inventory> findAllByHousehold(@Param("household") Household household);
+    List<Inventory> findAllByHousehold (@Param("household") Household household);
+    
+    @Query("SELECT i FROM Inventory i LEFT JOIN i.owner p LEFT JOIN Household h ON (h.sharedInventory = i OR p.household = h) WHERE h.id = :householdId")
+    List<Inventory> findAllByHouseholdId (@Param("householdId") String householdId);
 }
 
