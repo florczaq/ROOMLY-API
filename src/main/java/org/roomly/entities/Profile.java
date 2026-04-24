@@ -6,7 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.roomly.dto.AvatarDTO;
+import org.roomly.dto.ProfileDTO;
 import org.roomly.security.authentication.entities.Account;
+import org.roomly.services.ColorsService;
 
 @Entity
 @Table(name = "users_profiles")
@@ -49,4 +52,11 @@ public class Profile {
                """.formatted(id, account.getId(), avatarName, avatarColorName, nickname, household.getName());
     }
     
+    public ProfileDTO toDTO () {
+        return new ProfileDTO(
+          id,
+          nickname,
+          new AvatarDTO(avatarName, avatarColorName, ColorsService.getHexByColor(avatarColorName))
+        );
+    }
 }

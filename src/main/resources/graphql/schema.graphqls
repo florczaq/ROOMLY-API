@@ -1,8 +1,8 @@
 type Query{
     household(householdId: String!): String!
-    products(barcode: String!, key: String): ProductDetails!
     householdInfo(householdId: String!): String!
     availableAvatarsAndColors: AvatarsAndColors!
+    shoppingList(householdId: String!, shared: Boolean): [String]!
 }
 
 type Mutation {
@@ -10,11 +10,12 @@ type Mutation {
     joinHousehold(nickname: String!, avatarName: String!, avatarColorName: String!, joinCode: String!): User!
 }
 
-type ProductDetails {
+type Product {
+    id: Int!
     barcode: String
-    name: String
-    brand: String
-    quantity: String
+    name: String!
+    brand: String!
+    quantity: String!
 }
 
 type Household {
@@ -29,10 +30,16 @@ type User {
     avatar: Avatar
 }
 
+type Profile {
+    id: String!
+    nickname: String!
+    avatar: Avatar!
+}
+
 type Avatar {
     name: String!
-    colorName: String
-    colorHex: String
+    colorName: String!
+    colorHex: String!
 }
 
 type AvatarsAndColors {
@@ -44,3 +51,50 @@ type Color{
     name: String!
     hex: String!
 }
+
+type ShoppingList {
+    id: Int!
+    householdId: String!
+    owner: Profile
+    items: [ShoppingListItem]!
+}
+
+type ShoppingListItem {
+    id: Int!
+    product: Product!
+    count: Int!
+    purchased: Boolean!
+    addedAt: String!
+    purchasedAt: String
+    addedBy: Profile
+    notes: String
+}
+
+type Event {
+    id: Int!
+    name: String!
+    description: String
+    startTime: String!
+    endTime: String!
+    householdId: String!
+    creator: Profile!
+    attendees: [Profile]!
+}
+
+type Transaction {
+    id: Int!
+    title: String!
+    sendAt: String!
+    amount: Float!
+    sender: Profile!
+    recipient: Profile!
+    type: String!
+}
+
+type Inventory {
+    id: Int!
+    name: String!
+    householdId: String!
+    owner: Profile
+}
+

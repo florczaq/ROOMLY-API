@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.roomly.dto.EventDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,5 +41,18 @@ public class Event {
         inverseJoinColumns = @JoinColumn(name = "profile_id")
     )
     List<Profile> attendees;
+    
+    public EventDTO toDTO () {
+        return new EventDTO(
+          id,
+          name,
+          description,
+          startTime,
+          endTime,
+          household.getId(),
+          creator.toDTO(),
+          attendees != null ? attendees.stream().map(Profile::toDTO).toList() : List.of()
+        );
+    }
     
 }

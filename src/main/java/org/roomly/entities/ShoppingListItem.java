@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.roomly.dto.ShoppingListItemDTO;
 
 import java.time.LocalDateTime;
 
@@ -56,6 +57,19 @@ public class ShoppingListItem {
         if (addedAt == null) {
             addedAt = LocalDateTime.now();
         }
+    }
+    
+    public ShoppingListItemDTO toDTO () {
+        return new ShoppingListItemDTO(
+          id,
+          product.toDTO(),
+          count,
+          purchased,
+          addedAt,
+          purchasedAt,
+          addedBy != null ? addedBy.toDTO() : null,
+          notes
+        );
     }
 }
 

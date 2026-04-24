@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.roomly.dto.TransactionDTO;
 import org.roomly.enums.TransactionType;
 
 import java.time.LocalDateTime;
@@ -50,5 +51,17 @@ public class Transaction {
         if (sendAt == null) {
             sendAt = LocalDateTime.now();
         }
+    }
+    
+    public TransactionDTO toDTO () {
+        return new TransactionDTO(
+          id,
+          title,
+          sendAt,
+          amount,
+          sender.toDTO(),
+          recipient.toDTO(),
+          type.toString()
+        );
     }
 }

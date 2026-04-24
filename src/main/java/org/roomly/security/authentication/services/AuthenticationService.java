@@ -11,6 +11,7 @@ import org.roomly.security.authentication.jwt.services.JwtService;
 import org.roomly.security.authentication.jwt.services.TokenType;
 import org.roomly.security.authentication.repositories.AccountRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -172,4 +174,11 @@ public class AuthenticationService implements UserDetailsService {
           .orElseThrow(() -> new IllegalArgumentException("User with id " + uuid + " not found"));
     }
     
+    public Account getCurrentlyAuthenticatedAccount () {
+        String accountId = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+          .map(Principal::getName)
+          .orElseThrow(() -> new IllegalStateException("No authenticated user found"));
+        
+        return this.loadAccountById(accountId);
+    }
 }

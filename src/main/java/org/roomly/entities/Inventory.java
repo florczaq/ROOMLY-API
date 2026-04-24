@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.roomly.dto.InventoryDTO;
 
 @Entity
 @NoArgsConstructor
@@ -35,5 +36,14 @@ public class Inventory {
     @OneToOne
     @JoinColumn(name = "owner_id")
     Profile owner;
+    
+    public InventoryDTO toDTO () {
+        return new InventoryDTO(
+          id,
+          name,
+          household.getId(),
+          owner != null ? owner.toDTO() : null
+        );
+    }
     
 }

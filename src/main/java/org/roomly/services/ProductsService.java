@@ -17,6 +17,7 @@ public class ProductsService {
     public ProductDTO getProduct (String barcode) {
         var json = externalApiService.fetchProductData(barcode);
         return new ProductDTO(
+          0, // External API products don't have a database ID yet
           barcode,
           this.extractName(json),
           this.extractBrand(json),
@@ -28,6 +29,7 @@ public class ProductsService {
         var json = externalApiService.fetchProductData(barcode);
         var value = json.path("product").path(key).asText();
         return new ProductDTO(
+          0, // External API products don't have a database ID yet
           barcode,
           key.equals("product_name") ? value : null,
           key.equals("brands") ? value : null,

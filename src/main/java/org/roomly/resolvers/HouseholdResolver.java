@@ -2,6 +2,7 @@ package org.roomly.resolvers;
 
 import lombok.RequiredArgsConstructor;
 import org.roomly.dto.HouseholdDTO;
+import org.roomly.services.HouseholdOrchestrationService;
 import org.roomly.services.HouseholdService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Controller;
 @SuppressWarnings("unused")
 public class HouseholdResolver {
     private final HouseholdService householdService;
+    private final HouseholdOrchestrationService householdOrchestrationService;
     
     //TODO temporary for testing, delete in production
     @QueryMapping
@@ -24,7 +26,7 @@ public class HouseholdResolver {
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
     public HouseholdDTO household (@Argument(name = "householdId") String id) {
-        return householdService.getHousehold(id);
+        return householdService.getHousehold(id).toDTO();
     }
     
     @MutationMapping
@@ -35,7 +37,9 @@ public class HouseholdResolver {
       @Argument String avatarName,
       @Argument String avatarColorName
     ) {
-        return householdService.createHousehold(name, membersLimit, nickname, avatarName, avatarColorName);
+        return householdOrchestrationService.createHouseholdWithResources(
+          name, membersLimit, nickname, avatarName, avatarColorName
+        );
     }
     
     public String updateHousehold () {

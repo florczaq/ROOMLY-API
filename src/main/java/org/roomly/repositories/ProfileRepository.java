@@ -6,6 +6,7 @@ import org.roomly.security.authentication.entities.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProfileRepository extends JpaRepository<Profile, String> {
     
@@ -22,4 +23,5 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     
     List<Profile> findAllByHouseholdId (String householdId);
     
+    Optional<Profile> findByHouseholdAndAccount (Household household, Account account);
 }

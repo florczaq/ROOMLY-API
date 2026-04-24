@@ -1,5 +1,6 @@
 package org.roomly.services;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,14 +16,17 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public class ColorsService {
     
-    private final Map<String, String> hexToColor;
-    private final Map<String, String> colorToHex;
+    private static Map<String, String> hexToColor = new HashMap<>();
+    private static Map<String, String> colorToHex = new HashMap<>();
     
-    public ColorsService (
-      @Value("${colors.storage.path}") String colorsCatalogPath,
-      @Value("${colors.storage.filename}") String colorsCatalogFilename
-    ) {
-        
+    @Value("${colors.storage.path}")
+    private String colorsCatalogPath;
+    
+    @Value("${colors.storage.filename}")
+    private String colorsCatalogFilename;
+    
+    @PostConstruct
+    public void init() {
         Map<String, String> parsedHexToColor = new HashMap<>();
         Map<String, String> parsedColorToHex = new HashMap<>();
         
@@ -55,16 +59,16 @@ public class ColorsService {
             throw new RuntimeException("Failed to construct path for colors catalog", e);
         }
         
-        this.hexToColor = Collections.unmodifiableMap(parsedHexToColor);
-        this.colorToHex = Collections.unmodifiableMap(parsedColorToHex);
+        hexToColor = Collections.unmodifiableMap(parsedHexToColor);
+        colorToHex = Collections.unmodifiableMap(parsedColorToHex);
     }
     
-    public Map<String, String> getAllColors () {
+    public static Map<String, String> getAllColors () {
         return colorToHex.entrySet().stream()
           .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
     
-    public String getColorByHex (String hex) {
+    public static String getColorByHex (String hex) {
         String normalizedHex = normalizeHex(hex);
         if (normalizedHex == null) {
             return null;
@@ -72,7 +76,7 @@ public class ColorsService {
         return hexToColor.get(normalizedHex);
     }
     
-    public String getHexByColor (String colorName) {
+    public static String getHexByColor (String colorName) {
         String normalizedColorName = normalizeColorName(colorName);
         if (normalizedColorName == null) {
             return null;
@@ -80,15 +84,15 @@ public class ColorsService {
         return colorToHex.get(normalizedColorName);
     }
     
-    public boolean isValidColor (String colorName) {
+    public static boolean isValidColor (String colorName) {
         return getHexByColor(colorName) != null;
     }
     
-    public boolean isValidHex (String hex) {
+    public static boolean isValidHex (String hex) {
         return getColorByHex(hex) != null;
     }
     
-    private String normalizeHex (String hex) {
+    private static String normalizeHex (String hex) {
         if (hex == null) {
             return null;
         }
@@ -103,7 +107,7 @@ public class ColorsService {
                : ("#" + trimmed).toUpperCase(Locale.ROOT);
     }
     
-    private String normalizeColorName (String colorName) {
+    private static String normalizeColorName (String colorName) {
         if (colorName == null) {
             return null;
         }

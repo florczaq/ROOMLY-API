@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.roomly.dto.ProductDTO;
 import org.roomly.enums.ProductInfoSource;
 import org.roomly.enums.QuantityUnits;
 
@@ -36,4 +37,13 @@ public class Product {
     @Enumerated(EnumType.STRING)
     ProductInfoSource infoSource;
     
+    public ProductDTO toDTO () {
+        return new ProductDTO(
+          id,
+          barcode,
+          name,
+          brand,
+          quantity + " " + unit.toString().toLowerCase()
+        );
+    }
 }

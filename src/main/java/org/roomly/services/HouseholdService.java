@@ -1,17 +1,12 @@
 package org.roomly.services;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.roomly.dto.HouseholdDTO;
 import org.roomly.entities.Household;
-import org.roomly.entities.Profile;
 import org.roomly.enums.CodeCharacters;
 import org.roomly.generators.GeneratedCodeFactory;
 import org.roomly.repositories.HouseholdRepository;
 import org.roomly.repositories.ProfileRepository;
-import org.roomly.security.authentication.services.AuthenticationService;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -21,68 +16,11 @@ import org.springframework.stereotype.Service;
 public class HouseholdService {
     private final HouseholdRepository houseHoldRepository;
     private final ProfileRepository profileRepository;
-    private final AuthenticationService authenticationService;
-    private final ShoppingListService shoppingListService;
-    private final InventoryService inventoryService;
     
-    public HouseholdDTO getHousehold (String householdId) {
+    public Household getHousehold (String householdId) {
         return houseHoldRepository
           .findById(householdId)
-          .orElseThrow(() -> new IllegalArgumentException("Household with id " + householdId + " not found"))
-          .toDTO();
-    }
-    
-    @Transactional
-    public HouseholdDTO createHousehold (String name,
-      int membersLimit,
-      String nickname,
-      String avatarName,
-      String avatarColorName
-    ) {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("User must be authenticated to create a household");
-        }
-        
-        var account = authenticationService.loadAccountById(authentication.getName());
-        
-        //Create owner profile without household
-        Profile ownerProfile = profileRepository.save(
-          new Profile()
-            .setAccount(account)
-            .setNickname(nickname)
-            .setAvatarName(avatarName)
-            .setAvatarColorName(avatarColorName)
-        );
-        
-        //Create household with the owner profile
-        Household household = houseHoldRepository.save(
-          new Household()
-            .setId(generateNewHouseholdId())
-            .setName(name)
-            .setMembersLimit(membersLimit)
-            .setJoinCode(generateNewJoinCode())
-            .setOwner(ownerProfile)
-        );
-        
-        //Update owner profile with the household
-        ownerProfile.setHousehold(household);
-        profileRepository.save(ownerProfile);
-        
-        //Shopping list for the household (shared)
-        shoppingListService.createShoppingList(null, household);
-        //Shopping list for the owner profile
-        shoppingListService.createShoppingList(ownerProfile, household);
-        
-        //Inventory for the household (shared)
-        inventoryService.createInventory(null, household);
-        //Inventory for the owner profile
-        inventoryService.createInventory(ownerProfile, household);
-        
-        
-        log.info(household.toString());
-        return household.toDTO();
+          .orElseThrow(() -> new IllegalArgumentException("Household with id " + householdId + " not found"));
     }
     
     public Household getHouseHoldByJoinCode (String joinCode) {
@@ -129,3 +67,7 @@ public class HouseholdService {
     }
     
 }
+/*
+    TODO
+     - Manage profiles in household (remove members, etc.)
+ */

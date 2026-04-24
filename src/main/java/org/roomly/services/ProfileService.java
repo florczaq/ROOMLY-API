@@ -2,61 +2,25 @@ package org.roomly.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.roomly.dto.AvatarDTO;
-import org.roomly.dto.UserDTO;
 import org.roomly.entities.Household;
 import org.roomly.entities.Profile;
 import org.roomly.repositories.ProfileRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.services.AuthenticationService;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.security.Principal;
-import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
     private final ProfileRepository profileRepository;
-    private final ColorsService colorsService;
-    private final HouseholdService householdService;
     private final AuthenticationService authenticationService;
-    private final ShoppingListService shoppingListService;
-    private final InventoryService inventoryService;
     
-    public UserDTO joinHousehold (String nickname, String avatarName, String avatarColorName, String joinCode) {
-        Account account = getCurrentlyAuthenticatedAccount();
-        log.info("User {} is attempting to join household with join code {}", account.getId(), joinCode);
-        
-        Household household = householdService.getHouseHoldByJoinCode(joinCode);
-        log.info(
-          "Account {} is trying to join household {} with nickname '{}', avatar name '{}' and avatar color '{}'",
-          account.getId(), household.getId(), nickname, avatarName, avatarColorName
-        );
-        
-        validateJoinHousehold(account, household, nickname, avatarName, avatarColorName);
-        
-        Profile savedProfile = createAndSaveUser(nickname, avatarName, avatarColorName, account, household);
-        
-        //Shopping list for new user
-        shoppingListService.createShoppingList(savedProfile, household);
-        //Inventory for new user
-        inventoryService.createInventory(savedProfile, household);
-        
-        return buildUserDTO(savedProfile);
-    }
-    
-    private Account getCurrentlyAuthenticatedAccount () {
-        String accountId = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
-          .map(Principal::getName)
-          .orElseThrow(() -> new IllegalStateException("No authenticated user found"));
-        
-        return authenticationService.loadAccountById(accountId);
-    }
-    
-    private void validateJoinHousehold (Account account,
+    /**
+     * Validates that a user can join a household with the given parameters.
+     * Throws exceptions if validation fails.
+     */
+    public void validateJoinHousehold (Account account,
       Household household,
       String nickname,
       String avatarName,
@@ -68,6 +32,30 @@ public class ProfileService {
         validateAvatarCombinationAvailability(household, avatarName, avatarColorName);
         validateAvatarColor(avatarColorName);
         validateAvatarName(avatarName);
+    }
+    
+    /**
+     * Creates and saves a new profile.
+     */
+    public Profile createProfile (String nickname,
+      String avatarName,
+      String avatarColorName,
+      Account account,
+      Household household
+    ) {
+        return profileRepository.save(
+          new Profile()
+            .setNickname(nickname)
+            .setAccount(account)
+            .setHousehold(household)
+            .setAvatarName(avatarName)
+            .setAvatarColorName(avatarColorName));
+    }
+    
+    public Profile getCurrentlyAuthenticatedUserProfile (Household household) {
+        Account account = authenticationService.getCurrentlyAuthenticatedAccount();
+        return profileRepository.findByHouseholdAndAccount(household, account)
+          .orElseThrow(() -> new RuntimeException("Profile not found for account: " + account.getId()));
     }
     
     private void validateNotAlreadyMember (Account account, Household household) {
@@ -99,7 +87,7 @@ public class ProfileService {
     }
     
     private void validateAvatarColor (String avatarColorName) {
-        if (!colorsService.isValidColor(avatarColorName)) {
+        if (!ColorsService.isValidColor(avatarColorName)) {
             throw new IllegalArgumentException("Invalid avatar color: " + avatarColorName);
         }
     }
@@ -109,32 +97,6 @@ public class ProfileService {
         if (avatarName == null || avatarName.trim().isEmpty()) {
             throw new IllegalArgumentException("Avatar name cannot be empty");
         }
-    }
-    
-    private Profile createAndSaveUser (String nickname,
-      String avatarName,
-      String avatarColorName,
-      Account account,
-      Household household
-    ) {
-        return profileRepository.save(
-          new Profile()
-            .setNickname(nickname)
-            .setAccount(account)
-            .setHousehold(household)
-            .setAvatarName(avatarName)
-            .setAvatarColorName(avatarColorName));
-    }
-    
-    private UserDTO buildUserDTO (Profile profile) {
-        return new UserDTO(
-          profile.getNickname(),
-          new AvatarDTO(
-            profile.getAvatarName(),
-            profile.getAvatarColorName(),
-            colorsService.getHexByColor(profile.getAvatarColorName())
-          )
-        );
     }
     
     
