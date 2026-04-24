@@ -7,6 +7,7 @@ import org.roomly.entities.Profile;
 import org.roomly.repositories.ProfileRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.services.AuthenticationService;
+import org.roomly.utils.ColorsUtil;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -89,7 +90,7 @@ public class ProfileService {
     }
     
     private void validateAvatarColor (String avatarColorName) {
-        if (!ColorsService.isValidColor(avatarColorName)) {
+        if (!ColorsUtil.isValidColor(avatarColorName)) {
             throw new IllegalArgumentException("Invalid avatar color: " + avatarColorName);
         }
     }

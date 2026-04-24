@@ -34,7 +34,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
         http
           .csrf(AbstractHttpConfigurer::disable)
           .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-          .authorizeHttpRequests((auth) ->
+          .authorizeHttpRequests(auth ->
             auth
               // "open" endpoints are accessible without authentication for testing purposes,
               // should be removed in production

@@ -51,7 +51,7 @@ public class Account {
             devicesStr = "<not loaded>";
         }
         return """
-               \nAccount {
+               Account {
                    id: %s,
                    email: %s,
                    authProvider: %s,

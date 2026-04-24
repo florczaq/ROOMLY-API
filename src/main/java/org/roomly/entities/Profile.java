@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
 import org.roomly.dto.AvatarDTO;
 import org.roomly.dto.ProfileDTO;
 import org.roomly.security.authentication.entities.Account;
-import org.roomly.services.ColorsService;
+import org.roomly.utils.ColorsUtil;
 
 @Entity
 @Table(name = "users_profiles")
@@ -50,7 +50,7 @@ public class Profile {
     @Override
     public String toString () {
         return """
-               \nUser {
+               User {
                     id: %s,
                     account: %s,
                     avatarName: %s,
@@ -64,7 +64,7 @@ public class Profile {
         return new ProfileDTO(
           id,
           nickname,
-          new AvatarDTO(avatarName, avatarColorName, ColorsService.getHexByColor(avatarColorName)),
+          new AvatarDTO(avatarName, avatarColorName, ColorsUtil.getHexByColor(avatarColorName)),
           inventory != null ? inventory.toDTO() : null,
           shoppingList != null ? shoppingList.toDTO() : null
         );

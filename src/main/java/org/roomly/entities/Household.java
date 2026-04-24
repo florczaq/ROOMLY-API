@@ -53,7 +53,7 @@ public class Household {
     @Override
     public String toString () {
         return """
-               \nHousehold {
+               Household {
                     id: %s,
                     name: %s,
                     joinCode: %s,

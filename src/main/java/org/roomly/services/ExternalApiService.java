@@ -34,7 +34,7 @@ public class ExternalApiService {
         try {
             return objectMapper.readTree(jsonResponse);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse product data for barcode: " + barcode, e);
+            throw new IllegalArgumentException("Failed to parse product data for barcode: " + barcode, e);
         }
     }
 }

@@ -13,7 +13,6 @@ import java.lang.annotation.*;
 })
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = BarcodeValidator.class)
-@SuppressWarnings("unused")
 public @interface ValidBarcode {
     String message () default "Invalid barcode format";
     

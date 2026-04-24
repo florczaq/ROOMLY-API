@@ -91,10 +91,11 @@ public class AuthenticationService implements UserDetailsService {
     @Transactional
     public TokenResponse login (String email, String password) {
         Account account = accountRepository.findByEmail(email)
-          .orElseThrow(() -> new IllegalArgumentException("User with email " + email + " not found"));
+          .orElseThrow(() -> new IllegalArgumentException("User with email %s not found".formatted(email)));
         
         if (account.getAuthProvider() != AuthProvider.EMAIL_PASSWORD) {
-            throw new IllegalArgumentException("User with email " + email + " is not an email-password user");
+            throw new IllegalArgumentException(
+              "User with email %s is not an email-password user".formatted(email));
         }
         
         if (!passwordEncoder.matches(password, account.getPasswordHash())) {

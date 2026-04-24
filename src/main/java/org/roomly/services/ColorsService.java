@@ -3,22 +3,21 @@ package org.roomly.services;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.json.JSONParser;
+import org.roomly.utils.ColorsUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
+/**
+ * Service that loads color catalog from file and initializes ColorsUtil.
+ */
 @Slf4j
 @Service
-@SuppressWarnings({"unused", "unchecked"})
-
 public class ColorsService {
-    
-    private static Map<String, String> hexToColor = new HashMap<>();
-    private static Map<String, String> colorToHex = new HashMap<>();
     
     @Value("${colors.storage.path}")
     private String colorsCatalogPath;
@@ -27,98 +26,44 @@ public class ColorsService {
     private String colorsCatalogFilename;
     
     @PostConstruct
-    public void init() {
+    public void init() throws IOException {
         Map<String, String> parsedHexToColor = new HashMap<>();
         Map<String, String> parsedColorToHex = new HashMap<>();
         
+        Path filePath = Path.of(colorsCatalogPath, colorsCatalogFilename);
+        if (!filePath.toFile().exists()) {
+            ColorsUtil.initialize(parsedHexToColor, parsedColorToHex);
+            return;
+        }
+        
         try {
-            Path filePath = Path.of(colorsCatalogPath, colorsCatalogFilename);
-            if (filePath.toFile().exists()) {
-                log.info("Loading colors catalog from: {}", filePath);
-                String jsonContent = Files.readString(filePath);
-                JSONParser parser = new JSONParser(jsonContent);
-                Object parsed = parser.parse();
-                if (parsed instanceof List) {
-                    List<Object> colorsList = (List<Object>) parsed;
-                    for (Object object : colorsList) {
-                        if (!(object instanceof Map<?, ?> map)) {
-                            continue;
-                        }
-                        String hex = normalizeHex((String) map.get("hex"));
-                        String colorName = normalizeColorName((String) map.get("name"));
-                        if (hex != null && colorName != null) {
-                            parsedHexToColor.put(hex, colorName);
-                            parsedColorToHex.put(colorName, hex);
-                        }
-                    }
-                    log.info("Loaded {} colors into catalog", parsedHexToColor.size());
-                } else {
-                    log.error("Colors catalog JSON is not an array: {}", colorsCatalogFilename);
+            log.info("Loading colors catalog from: {}", filePath);
+            String jsonContent = Files.readString(filePath);
+            Object parsed = new JSONParser(jsonContent).parse();
+            
+            if (!(parsed instanceof List)) {
+                log.error("Colors catalog JSON is not an array: {}", colorsCatalogFilename);
+                ColorsUtil.initialize(parsedHexToColor, parsedColorToHex);
+                return;
+            }
+            
+            List<Object> colorsList = (List<Object>) parsed;
+            for (Object object : colorsList) {
+                if (!(object instanceof Map<?, ?> map)) {
+                    continue;
+                }
+                String hex = ColorsUtil.normalizeHex((String) map.get("hex"));
+                String colorName = ColorsUtil.normalizeColorName((String) map.get("name"));
+                if (hex != null && colorName != null) {
+                    parsedHexToColor.put(hex, colorName);
+                    parsedColorToHex.put(colorName, hex);
                 }
             }
+            log.info("Loaded {} colors into catalog", parsedHexToColor.size());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to construct path for colors catalog", e);
+            throw new IOException("Failed to load colors catalog", e);
+        } finally {
+            ColorsUtil.initialize(parsedHexToColor, parsedColorToHex);
         }
-        
-        hexToColor = Collections.unmodifiableMap(parsedHexToColor);
-        colorToHex = Collections.unmodifiableMap(parsedColorToHex);
-    }
-    
-    public static Map<String, String> getAllColors () {
-        return colorToHex.entrySet().stream()
-          .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
-    }
-    
-    public static String getColorByHex (String hex) {
-        String normalizedHex = normalizeHex(hex);
-        if (normalizedHex == null) {
-            return null;
-        }
-        return hexToColor.get(normalizedHex);
-    }
-    
-    public static String getHexByColor (String colorName) {
-        String normalizedColorName = normalizeColorName(colorName);
-        if (normalizedColorName == null) {
-            return null;
-        }
-        return colorToHex.get(normalizedColorName);
-    }
-    
-    public static boolean isValidColor (String colorName) {
-        return getHexByColor(colorName) != null;
-    }
-    
-    public static boolean isValidHex (String hex) {
-        return getColorByHex(hex) != null;
-    }
-    
-    private static String normalizeHex (String hex) {
-        if (hex == null) {
-            return null;
-        }
-        
-        String trimmed = hex.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        
-        return trimmed.startsWith("#")
-               ? trimmed.toUpperCase(Locale.ROOT)
-               : ("#" + trimmed).toUpperCase(Locale.ROOT);
-    }
-    
-    private static String normalizeColorName (String colorName) {
-        if (colorName == null) {
-            return null;
-        }
-        
-        String trimmed = colorName.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        
-        return trimmed.replace(' ', '_').toUpperCase(Locale.ROOT);
     }
 }
-

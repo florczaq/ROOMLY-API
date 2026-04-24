@@ -5,10 +5,10 @@ import org.roomly.services.AvatarService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
-// TODO 'open' is temporary for testing, delete in production
 @RequestMapping("/api/avatars")
-//@RequestMapping("/open/api/avatars")
 @RequiredArgsConstructor
 public class AvatarController {
     private final AvatarService avatarService;
@@ -17,7 +17,7 @@ public class AvatarController {
     public ResponseEntity<byte[]> getAvatar (@PathVariable String name,
       @RequestParam(name = "color", required = false) String color,
       @RequestParam(name = "hex", required = false) String hex
-    ) {
+    ) throws IOException {
         if (color != null) {
             return ResponseEntity.ok(avatarService.loadAvatarFromStorage(name, color));
         }

@@ -20,13 +20,15 @@ public class HouseholdService {
     public Household getHousehold (String householdId) {
         return houseHoldRepository
           .findById(householdId)
-          .orElseThrow(() -> new IllegalArgumentException("Household with id " + householdId + " not found"));
+          .orElseThrow(
+            () -> new IllegalArgumentException("Household with id %s not found".formatted(householdId)));
     }
     
     public Household getHouseHoldByJoinCode (String joinCode) {
         return houseHoldRepository
           .findByJoinCode((joinCode))
-          .orElseThrow(() -> new IllegalArgumentException("Household with join code " + joinCode + " not found"));
+          .orElseThrow(() -> new IllegalArgumentException(
+            "Household with join code %s not found".formatted(joinCode)));
     }
     
     public String updateHousehold () {

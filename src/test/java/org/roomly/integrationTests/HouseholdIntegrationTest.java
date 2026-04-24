@@ -14,7 +14,7 @@ import org.roomly.repositories.ShoppingListRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.jwt.dto.TokenResponse;
 import org.roomly.security.authentication.repositories.AccountRepository;
-import org.roomly.services.ColorsService;
+import org.roomly.utils.ColorsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -511,7 +511,7 @@ class HouseholdIntegrationTest {
                   "avatar", Map.of(
                     "name", profile.getAvatarName(),
                     "colorName", profile.getAvatarColorName(),
-                    "colorHex", Objects.requireNonNull(ColorsService.getHexByColor(profile.getAvatarColorName()))
+                    "colorHex", Objects.requireNonNull(ColorsUtil.getHexByColor(profile.getAvatarColorName()))
                   ),
                   "inventory", inventoryData,
                   "shoppingList", shoppingListData,
