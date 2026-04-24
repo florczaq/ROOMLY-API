@@ -32,21 +32,13 @@ type Mutation {
     #=== PROFILE ===
     #=== SHOPPING LIST ===
     #=== INVENTORY ===
-    #===AVATARS AND COLORS ===
+    #=== AVATARS AND COLORS ===
     #=== EVENTS ===
     #=== TRANSACTIONS ===
     addTransaction(title: String!, amount: Float!, recipientId: String!, type: String!): Transaction!
 }
 
 #=== ENTITIES ===
-
-type Product {
-    id: Int!
-    barcode: String
-    name: String!
-    brand: String!
-    quantity: String!
-}
 
 type Household {
     id: String!
@@ -84,6 +76,14 @@ type Color{
     hex: String!
 }
 
+type Product {
+    id: Int!
+    barcode: String
+    name: String!
+    brand: String!
+    quantity: String!
+}
+
 type ShoppingList {
     id: Int!
     items: [ShoppingListItem]!
@@ -96,6 +96,19 @@ type ShoppingListItem {
     purchased: Boolean!
     addedAt: String!
     purchasedAt: String
+    notes: String
+}
+
+type Inventory {
+    id: Int!
+    items: [InventoryItem]!
+}
+
+type InventoryItem {
+    id: Int!
+    product: Product!
+    count: Int!
+    addedAt: String!
     notes: String
 }
 
@@ -119,17 +132,3 @@ type Transaction {
     recipient: Profile!
     type: String!
 }
-
-type Inventory {
-    id: Int!
-    items: [InventoryItem]!
-}
-
-type InventoryItem {
-    id: Int!
-    product: Product!
-    count: Int!
-    addedAt: String!
-    notes: String
-}
-
