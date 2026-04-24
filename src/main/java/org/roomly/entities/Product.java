@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.roomly.annotations.ValidBarcode;
 import org.roomly.dto.ProductDTO;
 import org.roomly.enums.ProductInfoSource;
 
@@ -16,12 +17,14 @@ import org.roomly.enums.ProductInfoSource;
 @Setter
 @Accessors(chain = true)
 public class Product {
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     int id;
     
     @Column(nullable = false)
     String name;
     
+    @ValidBarcode
     @Column(nullable = false)
     String brand;
     
