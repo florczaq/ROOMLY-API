@@ -6,8 +6,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.jwt.entities.RefreshToken;
 import org.roomly.security.authentication.jwt.repositories.RefreshTokenRepository;
+import org.roomly.security.authentication.repositories.AccountRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
@@ -26,24 +28,27 @@ public class JwtService {
     private final long accessTokenExpirationTime;
     private final String secretKey;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AccountRepository accountRepository;
     
     public JwtService (
       @Value("${security.jwt.refresh.token.expiration}") long refreshTokenExpirationTime,
       @Value("${security.jwt.access.token.expiration}") long accessTokenExpirationTime,
       @Value("${security.jwt.secret}") String secretKey,
-      RefreshTokenRepository refreshTokenRepository
+      RefreshTokenRepository refreshTokenRepository,
+      AccountRepository accountRepository
     ) {
         this.refreshTokenExpirationTime = refreshTokenExpirationTime;
         this.accessTokenExpirationTime = accessTokenExpirationTime;
         this.secretKey = secretKey;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.accountRepository = accountRepository;
     }
     
     public String generateToken (String uuid, TokenType tokenType) {
         return createToken(uuid, tokenType);
     }
     
-    @SuppressWarnings("all")
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean validateToken (String token, TokenType expectedType) {
         try {
             //If token is invalid, extracting claims will throw an exception
@@ -108,11 +113,15 @@ public class JwtService {
         
         if (type == TokenType.REFRESH) {
             try {
+                Account account = accountRepository.findById(subject)
+                  .orElseThrow(
+                    () -> new IllegalArgumentException("Account not found for refresh token generation"));
+                
                 RefreshToken savedToken = refreshTokenRepository.save(
                   new RefreshToken(
                     null,
                     token,
-                    subject,
+                    account,
                     Date.from(Instant.now().plusMillis(ttl)).getTime(),
                     true
                   )
