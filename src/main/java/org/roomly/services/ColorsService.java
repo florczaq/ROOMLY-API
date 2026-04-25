@@ -19,14 +19,20 @@ import java.util.*;
 @Service
 public class ColorsService {
     
+    /** The directory path where the colors catalog file is located (e.g. "/data/colors"). */
     @Value("${colors.storage.path}")
     private String colorsCatalogPath;
     
+    /** The name of the colors catalog file (e.g. "colors.json"). */
     @Value("${colors.storage.filename}")
     private String colorsCatalogFilename;
     
+    /**
+     * Loads colors catalog from file and initializes ColorsUtil.
+     * If file is missing or invalid, initializes ColorsUtil with empty catalog.
+     */
     @PostConstruct
-    public void init() throws IOException {
+    public void init () throws IOException {
         Map<String, String> parsedHexToColor = new HashMap<>();
         Map<String, String> parsedColorToHex = new HashMap<>();
         

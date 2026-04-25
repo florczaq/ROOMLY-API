@@ -19,6 +19,7 @@ import java.util.List;
 @Accessors(chain = true)
 @SuppressWarnings("JpaDataSourceORMInspection")
 public class Event {
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     int id;
     String name;

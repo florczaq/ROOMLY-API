@@ -1,3 +1,5 @@
+scalar DateTime
+
 type Query{
     #=== HOUSEHOLD ===
     household(householdId: String!): Household!
@@ -21,12 +23,12 @@ type Query{
     availableAvatarsAndColors: AvatarsAndColors!
 
     #=== EVENTS ===
+    events(householdId: String!, from: DateTime, to: DateTime): [Event]!
+    event(eventId: Int!): Event!
+    eventsForProfile(profileId: String!, from: DateTime, to: DateTime): Event!
 
     #=== TRANSACTIONS ===
     transactions(householdId: String!): [Transaction]!
-
-    # === TEMPORARY === TODO: Remove in production, only for testing purposes
-    householdInfo(householdId: String!): String!
 }
 
 type Mutation {
@@ -48,19 +50,15 @@ type Mutation {
     #=== AVATARS AND COLORS ===
 
     #=== EVENTS ===
-
+    addEvent(name: String!, description: String, startTime: DateTime!, endTime: DateTime!): Event!
+    updateEvent(eventId: Int!, name: String, description: String, startTime: DateTime, endTime: DateTime): Event!
+    deleteEvent(eventId: Int!): Boolean!
     #=== TRANSACTIONS ===
     addTransaction(title: String!, amount: Float!, recipientId: String!, type: String!): Transaction!
 }
 
 #=== ENTITIES ===
 
-input ProductInput {
-    barcode: String
-    name: String!
-    brand: String!
-    quantity: String!
-}
 type Household {
     id: String!
     name: String!
@@ -137,8 +135,8 @@ type Event {
     id: Int!
     name: String!
     description: String
-    startTime: String!
-    endTime: String!
+    startTime: DateTime!
+    endTime: DateTime!
     householdId: String!
     creator: Profile!
     attendees: [Profile]!
