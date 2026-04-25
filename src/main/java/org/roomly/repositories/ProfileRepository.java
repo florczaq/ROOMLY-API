@@ -4,6 +4,7 @@ import org.roomly.entities.Household;
 import org.roomly.entities.Profile;
 import org.roomly.security.authentication.entities.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +17,8 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     
     double countByHousehold (Household household);
     
-    boolean existsByHouseholdAndAvatarNameAndAvatarColorName (Household household,
+    @Query("SELECT COUNT(p) > 0 FROM Profile p WHERE p.household = :household AND (p.avatarName = :avatarName OR p.avatarColorName = :avatarColorName)")
+    boolean existsByHouseholdAndAvatarNameOrAvatarColorName (Household household,
       String avatarName,
       String avatarColorName
     );

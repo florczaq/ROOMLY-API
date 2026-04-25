@@ -9,6 +9,7 @@ import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.services.AuthenticationService;
 import org.roomly.utils.ColorsUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -53,48 +54,69 @@ public class ProfileService {
             .setAvatarColorName(avatarColorName));
     }
     
+    /**
+     * Retrieves the profile of the currently authenticated user in the given household.
+     * Throws an exception if no profile is found.
+     */
     public Profile getCurrentlyAuthenticatedUserProfile (Household household) {
         Account account = authenticationService.getCurrentlyAuthenticatedAccount();
         return profileRepository.findByHouseholdAndAccount(household, account)
           .orElseThrow(() -> new RuntimeException("Profile not found for account: " + account.getId()));
     }
     
-    
-    
+    /**
+     * Validates that the user is not already a member of the household.
+     */
     private void validateNotAlreadyMember (Account account, Household household) {
         if (profileRepository.existsByAccountAndHousehold(account, household)) {
             throw new IllegalArgumentException("User is already a member of this household");
         }
     }
     
+    /**
+     * Validates that the nickname is not already taken in the household.
+     */
     private void validateNicknameAvailability (Household household, String nickname) {
         if (profileRepository.existsByHouseholdAndNickname(household, nickname)) {
             throw new IllegalArgumentException("Nickname is already taken in this household");
         }
     }
     
+    /**
+     * Validates that the household has not reached its members limit.
+     */
     private void validateHouseholdCapacity (Household household) {
         if (profileRepository.countByHousehold(household) >= household.getMembersLimit()) {
             throw new IllegalStateException("Household has reached its members limit");
         }
     }
     
+    /**
+     * Validates that the combination of avatar name and color is available in the household.
+     * This ensures that no two profiles in the same household can have the same avatar name or color.
+     */
     private void validateAvatarCombinationAvailability (Household household,
       String avatarName,
       String avatarColorName
     ) {
-        if (profileRepository.existsByHouseholdAndAvatarNameAndAvatarColorName(
+        if (profileRepository.existsByHouseholdAndAvatarNameOrAvatarColorName(
           household, avatarName, avatarColorName)) {
             throw new IllegalArgumentException("Avatar name or color is already taken in this household");
         }
     }
     
+    /**
+     * Validates that the avatar color is valid.
+     */
     private void validateAvatarColor (String avatarColorName) {
         if (!ColorsUtil.isValidColor(avatarColorName)) {
             throw new IllegalArgumentException("Invalid avatar color: " + avatarColorName);
         }
     }
     
+    /**
+     * Validates that the avatar name is valid.
+     */
     private void validateAvatarName (String avatarName) {
         //TODO validate by checking if the avatar name exists in the catalog of available avatars. For now, just check if it's not empty.
         if (avatarName == null || avatarName.trim().isEmpty()) {
@@ -102,5 +124,57 @@ public class ProfileService {
         }
     }
     
+    /**
+     * Retrieves a profile by its ID.
+     * Throws an exception if no profile is found.
+     */
+    public Profile getProfileById (String profileId) {
+        return profileRepository.findById(profileId)
+          .orElseThrow(() -> new IllegalArgumentException("Profile with id %s not found".formatted(profileId)));
+    }
     
+    /**
+     * Updates the profile with the given parameters.
+     * Validates the new parameters and saves the updated profile.
+     */
+    @Transactional
+    public Profile updateProfile (String profileId, String nickname, String avatarName, String avatarColorName) {
+        Profile profile = getProfileById(profileId);
+        Household household = profile.getHousehold();
+        
+        boolean nicknameChanged = nickname != null && !nickname.equals(profile.getNickname());
+        boolean avatarNameChanged = avatarName != null && !avatarName.equals(profile.getAvatarName());
+        boolean avatarColorChanged = avatarColorName != null && !avatarColorName.equals(
+          profile.getAvatarColorName());
+        
+        if (nicknameChanged) {
+            validateNicknameAvailability(household, nickname);
+        }
+        
+        if (avatarNameChanged) {
+            validateAvatarName(avatarName);
+        }
+        
+        if (avatarColorChanged) {
+            validateAvatarColor(avatarColorName);
+        }
+        
+        if (avatarNameChanged || avatarColorChanged) {
+            String newAvatarName = avatarName != null ? avatarName : profile.getAvatarName();
+            String newAvatarColor = avatarColorName != null ? avatarColorName : profile.getAvatarColorName();
+            validateAvatarCombinationAvailability(household, newAvatarName, newAvatarColor);
+        }
+        
+        if (nickname != null) {
+            profile.setNickname(nickname);
+        }
+        if (avatarName != null) {
+            profile.setAvatarName(avatarName);
+        }
+        if (avatarColorName != null) {
+            profile.setAvatarColorName(avatarColorName);
+        }
+        
+        return profileRepository.save(profile);
+    }
 }

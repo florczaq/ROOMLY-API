@@ -1,8 +1,10 @@
 type Query{
     #=== HOUSEHOLD ===
     household(householdId: String!): Household!
+    households: [Household]!
 
     #=== PROFILE ===
+    profile(profileId: String!): Profile!
 
     #=== SHOPPING LIST ===
     shoppingList(id: Int!): ShoppingList!
@@ -11,6 +13,9 @@ type Query{
     #=== INVENTORY ===
     inventory(id: Int!): Inventory!
     allInventories(householdId: String!): [Inventory]!
+
+    #=== PRODUCTS ===
+    getProductByBarcode(barcode: String!): Product #TODO
 
     #===AVATARS AND COLORS ===
     availableAvatarsAndColors: AvatarsAndColors!
@@ -30,16 +35,32 @@ type Mutation {
     joinHousehold(nickname: String!, avatarName: String!, avatarColorName: String!, joinCode: String!): Profile!
 
     #=== PROFILE ===
+    updateProfile(profileId: String!, nickname: String, avatarName: String, avatarColorName: String): Profile!
+    leaveHousehold(profileId: String!): Boolean! #TODO
+
     #=== SHOPPING LIST ===
+    addProductToShoppingList: Int #TODO
+    addProductToShoppingListById(productId: Int!, count: Int!, notes: String): ShoppingListItem!
+
     #=== INVENTORY ===
+    addProductToInventory: Int #TODO
+    addProductToInventoryById(productId: Int!, count: Int!, notes: String): InventoryItem!
     #=== AVATARS AND COLORS ===
+
     #=== EVENTS ===
+
     #=== TRANSACTIONS ===
     addTransaction(title: String!, amount: Float!, recipientId: String!, type: String!): Transaction!
 }
 
 #=== ENTITIES ===
 
+input ProductInput {
+    barcode: String
+    name: String!
+    brand: String!
+    quantity: String!
+}
 type Household {
     id: String!
     name: String!
