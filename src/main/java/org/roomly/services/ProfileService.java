@@ -7,6 +7,7 @@ import org.roomly.entities.Profile;
 import org.roomly.repositories.ProfileRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.services.AuthenticationService;
+import org.roomly.utils.AvatarsUtil;
 import org.roomly.utils.ColorsUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -118,9 +119,11 @@ public class ProfileService {
      * Validates that the avatar name is valid.
      */
     private void validateAvatarName (String avatarName) {
-        //TODO validate by checking if the avatar name exists in the catalog of available avatars. For now, just check if it's not empty.
         if (avatarName == null || avatarName.trim().isEmpty()) {
             throw new IllegalArgumentException("Avatar name cannot be empty");
+        }
+        if (!AvatarsUtil.isValidAvatarName(avatarName)) {
+            throw new IllegalArgumentException("Invalid avatar name: " + avatarName);
         }
     }
     

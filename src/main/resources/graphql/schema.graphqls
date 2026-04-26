@@ -38,7 +38,7 @@ type Mutation {
 
     #=== PROFILE ===
     updateProfile(profileId: String!, nickname: String, avatarName: String, avatarColorName: String): Profile!
-    leaveHousehold(profileId: String!): Boolean! 
+    leaveHousehold(profileId: String!): Boolean!
 
     #=== SHOPPING LIST ===
     addProductToShoppingListBy(productId: Int!, count: Int!, notes: String): ShoppingListItem!
