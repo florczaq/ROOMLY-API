@@ -2,6 +2,7 @@ HELP.md
 .gradle
 build/
 src/main/java/org/roomly/assets/avatars/*
+src/main/resources/static/*
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/

@@ -5,8 +5,8 @@ plugins {
 }
 
 group = 'roomly'
-version = '0.0.1'
-description = 'ROOMLY'
+version = '1.0.0'
+
 
 java {
     toolchain {
@@ -16,6 +16,14 @@ java {
 
 repositories {
     mavenCentral()
+}
+
+ext {
+    projectName = 'ROOMLY'
+    projectDescription = 'A household management system built with Spring Boot and GraphQL, featuring multi-tenant household organization, user profiles with customizable avatars, and product lookup integration.'
+
+    developerName = 'Mikołaj Florczak'
+    developerUrl = 'https://github/florczaq'
 }
 
 dependencies {
