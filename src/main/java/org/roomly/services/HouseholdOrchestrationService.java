@@ -145,5 +145,20 @@ public class HouseholdOrchestrationService {
         profile.setInventory(inventory);
         profileRepository.save(profile);
     }
+    
+    public Boolean removeMemberFromHousehold (String profileId) {
+        Account account = authenticationService.getCurrentlyAuthenticatedAccount();
+        log.info("User {} is attempting to leave household with profile ID {}", account.getId(), profileId);
+        
+        Profile profile = profileService.getProfileById(profileId);
+        
+        if (!profile.getAccount().getId().equals(account.getId())) {
+            throw new IllegalArgumentException("Profile does not belong to the currently authenticated user");
+        }
+        
+        householdService.removeMemberFromHousehold(profile);
+        log.info("Removed member {} from household {}", profile.getId(), profile.getHousehold().getId());
+        return true;
+    }
 }
 

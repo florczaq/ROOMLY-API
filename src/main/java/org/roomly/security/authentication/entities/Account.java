@@ -40,24 +40,4 @@ public class Account {
     private AuthProvider authProvider = AuthProvider.DEVICE_ONLY;
     
     private boolean emailVerified = false;
-    
-    @Override
-    public String toString () {
-        //Handle lazy loading of devices to avoid potential issues in toString()
-        String devicesStr;
-        try {
-            devicesStr = devices != null ? devices.toString() : "null";
-        } catch (Exception e) {
-            devicesStr = "<not loaded>";
-        }
-        return """
-               Account {
-                   id: %s,
-                   email: %s,
-                   authProvider: %s,
-                   emailVerified: %b,
-                   devices: %s
-               }
-               """.formatted(id, email, authProvider, emailVerified, devicesStr);
-    }
 }

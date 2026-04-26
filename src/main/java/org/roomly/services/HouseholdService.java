@@ -3,6 +3,7 @@ package org.roomly.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.roomly.entities.Household;
+import org.roomly.entities.Profile;
 import org.roomly.enums.CodeCharacters;
 import org.roomly.generators.GeneratedCodeFactory;
 import org.roomly.repositories.HouseholdRepository;
@@ -64,8 +65,12 @@ public class HouseholdService {
         }
         return householdRepository.findAllByAccount(authentication.getName());
     }
+    
+    public void removeMemberFromHousehold (Profile profile) {
+        Household household = profile.getHousehold();
+        household.getMembers().remove(profile);
+        householdRepository.save(household);
+        
+        profileRepository.delete(profile);
+    }
 }
-/*
-    TODO
-     - Manage profiles in household (remove members, etc.)
- */

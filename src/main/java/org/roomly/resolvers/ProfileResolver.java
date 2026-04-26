@@ -46,4 +46,10 @@ public class ProfileResolver {
     ) {
         return profileService.updateProfile(profileId, nickname, avatarName, avatarColorName).toDTO();
     }
+    
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public Boolean leaveHousehold (@Argument String profileId) {
+        return householdOrchestrationService.removeMemberFromHousehold(profileId);
+    }
 }

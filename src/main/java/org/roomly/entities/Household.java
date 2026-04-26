@@ -39,7 +39,7 @@ public class Household {
     @JoinColumn(name = "owner_id", nullable = false)
     Profile owner;
     
-    @OneToMany(mappedBy = "household", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "household", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<Profile> members = new ArrayList<>();
     
     @OneToOne(fetch = FetchType.EAGER)
@@ -49,18 +49,6 @@ public class Household {
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "shared_shopping_list_id")
     ShoppingList sharedShoppingList;
-    
-    @Override
-    public String toString () {
-        return """
-               Household {
-                    id: %s,
-                    name: %s,
-                    joinCode: %s,
-                    membersLimit: %d,
-                    ownerId: %s
-               """.formatted(id, name, joinCode, membersLimit, owner.getId());
-    }
     
     public HouseholdDTO toDTO () {
         return new HouseholdDTO(

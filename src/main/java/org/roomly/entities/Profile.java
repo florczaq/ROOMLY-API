@@ -26,39 +26,25 @@ public class Profile {
     @Column(name = "id", updatable = false, nullable = false)
     String id;
     
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id", nullable = false)
     Account account;
     
     String avatarName;
     String avatarColorName;
-    
     String nickname;
     
     @ManyToOne
     @JoinColumn(name = "household_id")
     Household household;
     
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "inventory_id")
     Inventory inventory;
     
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "shopping_list_id")
     ShoppingList shoppingList;
-    
-    @Override
-    public String toString () {
-        return """
-               User {
-                    id: %s,
-                    account: %s,
-                    avatarName: %s,
-                    avatarColorName: %s,
-                    nickname: %s,
-                    household: %s
-               """.formatted(id, account.getId(), avatarName, avatarColorName, nickname, household.getName());
-    }
     
     public ProfileDTO toDTO () {
         return new ProfileDTO(
