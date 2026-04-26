@@ -2,6 +2,7 @@ package org.roomly.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.roomly.utils.AvatarsUtil;
 import org.roomly.utils.ColorsUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,12 +25,13 @@ public class AvatarService {
     public AvatarService (
       @Value("${avatar.storage.path}") String storagePath,
       @Value("${avatar.storage.filename}") String catalogName
-    ) {
+    ) throws IOException {
         this.storagePath = storagePath;
         this.catalogName = catalogName;
+        AvatarsUtil.initialize(getAvailableAvatarsFromCatalog());
     }
     
-    public List<String> getAvailableAvatarsFromCatalog () throws IOException {
+    private List<String> getAvailableAvatarsFromCatalog () throws IOException {
         Path catalogPath = Path.of(storagePath, catalogName);
         log.info("Reading avatar catalog from: {}", catalogPath);
         
