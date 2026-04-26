@@ -2,8 +2,10 @@ package org.roomly.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
-import org.roomly.dto.ProductDTO;
+import org.roomly.annotations.ValidBarcode;
+import org.roomly.entities.Product;
 import org.roomly.repositories.ProductsRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,67 +13,46 @@ import org.springframework.stereotype.Service;
 public class ProductsService {
     private final ProductsRepository productsRepository;
     private final ExternalApiService externalApiService;
+    private static final String MISSING_VALUE = "Unknown";
+    private static final String PRODUCT_PATH = "product";
     
-    //TODO : implement caching mechanism to avoid redundant API calls for the same barcode
-    //TODO implement database storage for products to allow for user-added products and faster retrieval of frequently accessed products
-    public ProductDTO getProduct (String barcode) {
+    public Product fetchProduct (@ValidBarcode String barcode) {
         var json = externalApiService.fetchProductData(barcode);
-        return new ProductDTO(
-          0, // External API products don't have a database ID yet
-          barcode,
-          this.extractName(json),
-          this.extractBrand(json),
-          this.extractQuantity(json)
-        );
-    }
-    
-    public ProductDTO getProduct (String barcode, String key) {
-        var json = externalApiService.fetchProductData(barcode);
-        var value = json.path("product").path(key).asText();
-        return new ProductDTO(
-          0, // External API products don't have a database ID yet
-          barcode,
-          key.equals("product_name") ? value : null,
-          key.equals("brands") ? value : null,
-          key.equals("quantity") ? value : null
-        );
-    }
-    
-    public String addProduct () {
-        return "ProductsService";
-    }
-    
-    public String updateProduct () {
-        return "ProductsService";
-    }
-    
-    public String deleteProduct () {
-        return "ProductsService";
+        return productsRepository.save(
+          new Product().setBarcode(barcode)
+            .setName(extractName(json))
+            .setBrand(extractBrand(json))
+            .setQuantity(extractQuantity(json)));
     }
     
     private String extractName (JsonNode json) {
-        String name = json.path("product").path("product_name").asText();
+        String name = json.path(PRODUCT_PATH).path("product_name").asText();
         if (name.isEmpty()) {
-            return "Unknown";
+            return MISSING_VALUE;
         }
         return name;
     }
     
     private String extractBrand (JsonNode json) {
-        String brand = json.path("product").path("brands").asText();
+        String brand = json.path(PRODUCT_PATH).path("brands").asText();
         if (brand.isEmpty()) {
-            return "Unknown";
+            return MISSING_VALUE;
         }
         return brand;
     }
     
     private String extractQuantity (JsonNode json) {
-        String quantity = json.path("product").path("quantity").asText();
+        String quantity = json.path(PRODUCT_PATH).path("quantity").asText();
         if (quantity.isEmpty()) {
-            return "Unknown";
+            return MISSING_VALUE;
         }
         return quantity;
     }
     
+    @Cacheable(value = "products", key = "#barcode")
+    public Product getProductByBarcode (@ValidBarcode String barcode) {
+        var product = productsRepository.findByBarcode(barcode);
+        return product.orElseGet(() -> this.fetchProduct(barcode));
+    }
 }
 

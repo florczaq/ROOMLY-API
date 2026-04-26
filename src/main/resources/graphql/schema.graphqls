@@ -17,7 +17,7 @@ type Query{
     allInventories(householdId: String!): [Inventory]!
 
     #=== PRODUCTS ===
-    getProductByBarcode(barcode: String!): Product #TODO
+    product(barcode: String!): Product
 
     #===AVATARS AND COLORS ===
     availableAvatarsAndColors: AvatarsAndColors!
@@ -41,18 +41,18 @@ type Mutation {
     leaveHousehold(profileId: String!): Boolean! #TODO
 
     #=== SHOPPING LIST ===
-    addProductToShoppingList: Int #TODO
-    addProductToShoppingListById(productId: Int!, count: Int!, notes: String): ShoppingListItem!
+    addProductToShoppingListBy(productId: Int!, count: Int!, notes: String): ShoppingListItem!
 
     #=== INVENTORY ===
-    addProductToInventory: Int #TODO
-    addProductToInventoryById(productId: Int!, count: Int!, notes: String): InventoryItem!
+    addProductToInventory(productId: Int!, count: Int!, notes: String): InventoryItem!
+
     #=== AVATARS AND COLORS ===
 
     #=== EVENTS ===
     addEvent(name: String!, description: String, startTime: DateTime!, endTime: DateTime!): Event!
     updateEvent(eventId: Int!, name: String, description: String, startTime: DateTime, endTime: DateTime): Event!
     deleteEvent(eventId: Int!): Boolean!
+
     #=== TRANSACTIONS ===
     addTransaction(title: String!, amount: Float!, recipientId: String!, type: String!): Transaction!
 }

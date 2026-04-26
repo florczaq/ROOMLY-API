@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.roomly.entities.Event;
 import org.roomly.repositories.EventsRepository;
+import org.roomly.repositories.HouseholdRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
