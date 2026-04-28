@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TransactionsRepository extends JpaRepository<Transaction, String> {
+public interface TransactionsRepository extends JpaRepository<Transaction, Integer> {
     @Query("SELECT t FROM Transaction t WHERE t.sender.id = :profileId OR t.recipient.id = :profileId")
     List<Transaction> findAllProfilesTransactions (@Param("profileId") String profileId);
 }

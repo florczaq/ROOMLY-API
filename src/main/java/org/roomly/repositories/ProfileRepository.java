@@ -28,4 +28,7 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     Optional<Profile> findByHouseholdAndAccount (Household household, Account account);
     
     Optional<Profile> findProfileById (String id);
+    
+    @Query("SELECT COUNT(p) > 0 FROM Profile p WHERE p.id = :profileId AND p.account.id = :accountId")
+    boolean existsByIdAndAccountId (String profileId, String accountId);
 }

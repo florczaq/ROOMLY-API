@@ -2,6 +2,7 @@ package org.roomly.services;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.roomly.annotations.Notifiable;
 import org.roomly.entities.Household;
 import org.roomly.entities.Transaction;
 import org.roomly.enums.TransactionType;
@@ -21,7 +22,13 @@ public class TransactionsService {
     private final ProfileService profileService;
     private final HouseholdRepository householdRepository;
     
+    //TODO test
     @Transactional
+    @Notifiable(
+      title = "#{#title}: #{#type == 'EXPENSE' ? '+' : '-'} #{#amount}",
+      description = "A new transaction has been added to your household.",
+      recipientProfileId = "#{#recipientId}"
+    )
     public Transaction addTransaction (String title,
       double amount,
       String recipientId,
@@ -43,6 +50,16 @@ public class TransactionsService {
             .setRecipient(recipient)
             .setType(TransactionType.valueOf(type)));
         
+    }
+    
+    //TODO finish
+    public Transaction deleteTransaction (int transactionId) {
+        return null;
+    }
+    
+    //TODO finish
+    public Transaction getTransactionsByProfileId (String profileId) {
+        return null;
     }
     
     public List<Transaction> getTransactionsByHouseholdId (String householdId) {

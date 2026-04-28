@@ -33,7 +33,7 @@ public class ProfileResolver {
     ) {
         return householdOrchestrationService.addMemberToHousehold(
           nickname, avatarName, avatarColorName, joinCode
-        );
+        ).toDTO();
     }
     
     @MutationMapping
@@ -49,7 +49,8 @@ public class ProfileResolver {
     
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public Boolean leaveHousehold (@Argument String profileId) {
-        return householdOrchestrationService.removeMemberFromHousehold(profileId);
+    public boolean leaveHousehold (@Argument String profileId) {
+        householdOrchestrationService.removeMemberFromHousehold(profileId);
+        return true;
     }
 }

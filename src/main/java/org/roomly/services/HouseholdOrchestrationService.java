@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.roomly.annotations.Notifiable;
 import org.roomly.dto.HouseholdDTO;
 import org.roomly.dto.ProfileDTO;
 import org.roomly.entities.Household;
@@ -38,7 +39,7 @@ public class HouseholdOrchestrationService {
      * This is an atomic operation - all steps succeed or all fail together.
      */
     @Transactional
-    public HouseholdDTO createHouseholdWithResources(
+    public HouseholdDTO createHouseholdWithResources (
       String name,
       int membersLimit,
       String nickname,
@@ -55,21 +56,21 @@ public class HouseholdOrchestrationService {
         
         // Create owner profile (without saving yet)
         Profile ownerProfile = new Profile()
-            .setAccount(account)
-            .setNickname(nickname)
-            .setAvatarName(avatarName)
-            .setAvatarColorName(avatarColorName);
+          .setAccount(account)
+          .setNickname(nickname)
+          .setAvatarName(avatarName)
+          .setAvatarColorName(avatarColorName);
         
         // Save profile first to get an ID
         ownerProfile = profileRepository.save(ownerProfile);
         
         // Create household (without saving yet)
         Household household = new Household()
-            .setId(householdService.generateNewHouseholdId())
-            .setName(name)
-            .setMembersLimit(membersLimit)
-            .setJoinCode(householdService.generateNewJoinCode())
-            .setOwner(ownerProfile);
+          .setId(householdService.generateNewHouseholdId())
+          .setName(name)
+          .setMembersLimit(membersLimit)
+          .setJoinCode(householdService.generateNewJoinCode())
+          .setOwner(ownerProfile);
         
         // Save household to get it persisted (needed before creating resources)
         household = householdRepository.save(household);
@@ -101,8 +102,14 @@ public class HouseholdOrchestrationService {
      * Adds a new member to an existing household with validation and resource creation.
      * This is an atomic operation.
      */
+    //TODO test if annotation works correctly and only sends notification to household owner, not to the user who just joined
+    @Notifiable(
+      title = "New Household Member",
+      description = "#{#result.nickname} has joined your household ",
+      recipientProfileId = "#{#result.household.owner.id}"
+    )
     @Transactional
-    public ProfileDTO addMemberToHousehold(
+    public Profile addMemberToHousehold (
       String nickname,
       String avatarName,
       String avatarColorName,
@@ -121,7 +128,8 @@ public class HouseholdOrchestrationService {
         profileService.validateJoinHousehold(account, household, nickname, avatarName, avatarColorName);
         
         // Create profile
-        Profile savedProfile = profileService.createProfile(nickname, avatarName, avatarColorName, account, household);
+        Profile savedProfile = profileService.createProfile(
+          nickname, avatarName, avatarColorName, account, household);
         
         // Create resources for new member and assign them
         createAndAssignPersonalResources(savedProfile, household);
@@ -130,14 +138,15 @@ public class HouseholdOrchestrationService {
         entityManager.flush();
         
         log.info("Added member {} to household {}", savedProfile.getId(), household.getId());
-        return savedProfile.toDTO();
+        return savedProfile;
     }
     
     /**
      * Creates and assigns personal resources (inventory and shopping list) to a profile.
      * This is a helper method to avoid code duplication.
      */
-    private void createAndAssignPersonalResources(Profile profile, Household household) {
+    @Transactional
+    protected void createAndAssignPersonalResources (Profile profile, Household household) {
         var shoppingList = shoppingListService.createShoppingList(profile, household);
         var inventory = inventoryService.createInventory(profile);
         
@@ -146,7 +155,14 @@ public class HouseholdOrchestrationService {
         profileRepository.save(profile);
     }
     
-    public Boolean removeMemberFromHousehold (String profileId) {
+    @Transactional
+    @Notifiable(
+      title = "Household Member Left",
+      description = "#{#result.nickname} has left your household ",
+      recipientProfileId = "#{#result.household.owner.id}"
+    )
+    @SuppressWarnings("UnusedReturnValue")
+    public ProfileDTO removeMemberFromHousehold (String profileId) {
         Account account = authenticationService.getCurrentlyAuthenticatedAccount();
         log.info("User {} is attempting to leave household with profile ID {}", account.getId(), profileId);
         
@@ -158,7 +174,7 @@ public class HouseholdOrchestrationService {
         
         householdService.removeMemberFromHousehold(profile);
         log.info("Removed member {} from household {}", profile.getId(), profile.getHousehold().getId());
-        return true;
+        return profile.toDTO();
     }
 }
 

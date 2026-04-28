@@ -40,6 +40,7 @@ public class ProfileService {
     /**
      * Creates and saves a new profile.
      */
+    @Transactional
     public Profile createProfile (String nickname,
       String avatarName,
       String avatarColorName,

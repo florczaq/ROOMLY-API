@@ -1,5 +1,6 @@
 package org.roomly.services;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.roomly.entities.Household;
@@ -35,14 +36,6 @@ public class HouseholdService {
             "Household with join code %s not found".formatted(joinCode)));
     }
     
-    public String updateHousehold () {
-        return "HouseholdService";
-    }
-    
-    public String deleteHousehold () {
-        return "HouseholdService";
-    }
-    
     public String generateNewJoinCode () {
         String code;
         do code = GeneratedCodeFactory.generate(6, CodeCharacters.LOWERCASE_LETTERS_AND_DIGITS);
@@ -66,6 +59,7 @@ public class HouseholdService {
         return householdRepository.findAllByAccount(authentication.getName());
     }
     
+    @Transactional
     public void removeMemberFromHousehold (Profile profile) {
         Household household = profile.getHousehold();
         household.getMembers().remove(profile);

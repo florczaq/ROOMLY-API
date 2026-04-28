@@ -7,6 +7,9 @@ import org.roomly.entities.Household;
 import org.roomly.entities.Inventory;
 import org.roomly.entities.Profile;
 import org.roomly.entities.ShoppingList;
+import org.roomly.notifications.dto.NotificationDTO;
+import org.roomly.notifications.entities.Notification;
+import org.roomly.notifications.repositories.NotificationRepository;
 import org.roomly.repositories.HouseholdRepository;
 import org.roomly.repositories.InventoryRepository;
 import org.roomly.repositories.ProfileRepository;
@@ -60,6 +63,9 @@ class HouseholdIntegrationTest {
     @Autowired
     private ShoppingListRepository shoppingListRepository;
     
+    @Autowired
+    private NotificationRepository notificationRepository;
+    
     @BeforeEach
     void setUp () {
         // Set up MockMvc with security
@@ -74,6 +80,7 @@ class HouseholdIntegrationTest {
         accountRepository.deleteAll();
         inventoryRepository.deleteAll();
         shoppingListRepository.deleteAll();
+        notificationRepository.deleteAll();
     }
     
     @Test
@@ -340,30 +347,6 @@ class HouseholdIntegrationTest {
         // Step 5: Print comprehensive information
         System.out.println("--- Step 5: Printing comprehensive household information ---");
         
-        // Get household info using the test endpoint
-        String householdInfoQuery = String.format(
-          """
-          {
-              "query": "{ householdInfo(householdId: \\"%s\\") }"
-          }
-          """, householdId
-        );
-        
-        MvcResult infoResult = mockMvc.perform(post("/graphql")
-            .header("Authorization", "Bearer " + ownerTokens.accessToken())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(householdInfoQuery))
-          .andExpect(status().isOk())
-          .andReturn();
-        
-        String infoResponse = infoResult.getResponse().getContentAsString();
-        Map<String, Object> infoGraphqlResponse = objectMapper.readValue(infoResponse, Map.class);
-        String householdInfo = (String) ((Map<String, Object>) infoGraphqlResponse.get("data")).get(
-          "householdInfo");
-        
-        System.out.println("\n=== HOUSEHOLD COMPLETE INFO ===");
-        System.out.println(householdInfo);
-        
         // Verify with direct database queries
         System.out.println("\n=== DATABASE VERIFICATION ===");
         
@@ -538,6 +521,20 @@ class HouseholdIntegrationTest {
         System.out.println("  - allShoppingLists query");
         System.out.println("  - household query (structured data)");
         System.out.println("  - householdInfo query (test endpoint)");
+        
+        List<NotificationDTO> notifications = notificationRepository
+          .findAll()
+          .stream()
+          .map(Notification::toDto)
+          .toList();
+        System.out.println("\nNotifications in the system:");
+        for (NotificationDTO notification : notifications) {
+            System.out.println("  - Notification ID: " + notification.id());
+            System.out.println("    Title: " + notification.title());
+            System.out.println("    Message: " + notification.message());
+            System.out.println("    Timestamp: " + notification.timestamp());
+            System.out.println("    Recipient Profile ID: " + notification.profileId());
+        }
     }
 }
 

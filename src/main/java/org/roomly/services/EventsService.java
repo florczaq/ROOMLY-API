@@ -2,7 +2,9 @@ package org.roomly.services;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.roomly.annotations.Notifiable;
 import org.roomly.entities.Event;
+import org.roomly.entities.Profile;
 import org.roomly.repositories.EventsRepository;
 import org.roomly.repositories.HouseholdRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,8 +51,7 @@ public class EventsService {
       LocalDateTime startTime,
       LocalDateTime endTime
     ) {
-        Event event = eventsRepository.findById(eventId)
-          .orElseThrow(() -> new EntityNotFoundException("Event with id " + eventId + " not found"));
+        Event event = this.getEventById(eventId);
         
         boolean nameChanged = name != null && !name.equals(event.getName());
         boolean descriptionChanged = description != null && !description.equals(event.getDescription());
@@ -73,14 +74,8 @@ public class EventsService {
     }
     
     public Boolean deleteEvent (int eventId) {
-        var event = eventsRepository.findById(eventId)
-          .orElseThrow(() -> new EntityNotFoundException("Event with id %d not found".formatted(eventId)));
-        
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new SecurityException("User is not authenticated");
-        }
-        String accountId = authentication.getName();
+        Event event = this.getEventById(eventId);
+        String accountId = this.getAuthenticatedUserId();
         
         if (event.getCreator().getAccount().getId().equals(accountId)) {
             eventsRepository.deleteById(eventId);
@@ -88,6 +83,59 @@ public class EventsService {
             throw new SecurityException("User is not the creator of the event");
         }
         return true;
+    }
+    
+    //TODO test
+    @Notifiable(
+      title = "You have been added to an event",
+      description = "You have been added as an attendee to the event: #{#result.name}",
+      recipientProfileId = "#{#profileId}"
+    )
+    public Event addAttendee (int eventId, String profileId) {
+        Event event = this.getEventById(eventId);
+        
+        String accountId = this.getAuthenticatedUserId();
+        
+        if (event.getCreator().getAccount().getId().equals(accountId)) {
+            if (event.getAttendees().stream().anyMatch(profile -> profile.getId().equals(profileId))) {
+                throw new IllegalArgumentException(
+                  "Profile with id %s is already an attendee of the event".formatted(profileId));
+            }
+            event.getAttendees().add(new Profile().setId(profileId));
+            return eventsRepository.save(event);
+        } else {
+            throw new SecurityException("User is not the creator of the event");
+        }
+    }
+    
+    @Notifiable(
+      title = "You have been removed from an event",
+      description = "You have been removed as an attendee from the event: #{#result.name}",
+      recipientProfileId = "#{#profileId}"
+    )
+    public Event removeAttendee (int eventId, String profileId) {
+        Event event = this.getEventById(eventId);
+        String accountId = this.getAuthenticatedUserId();
+        
+        
+        if (event.getCreator().getAccount().getId().equals(accountId)) {
+            if (event.getAttendees().stream().noneMatch(profile -> profile.getId().equals(profileId))) {
+                throw new IllegalArgumentException(
+                  "Profile with id %s is not an attendee of the event".formatted(profileId));
+            }
+            event.getAttendees().removeIf(profile -> profile.getId().equals(profileId));
+            return eventsRepository.save(event);
+        } else {
+            throw new SecurityException("User is not the creator of the event");
+        }
+    }
+    
+    private String getAuthenticatedUserId () {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("User is not authenticated");
+        }
+        return authentication.getName();
     }
 }
 
