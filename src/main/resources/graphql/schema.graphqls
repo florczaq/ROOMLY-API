@@ -55,6 +55,7 @@ type Mutation {
 
     #=== TRANSACTIONS ===
     addTransaction(title: String!, amount: Float!, recipientId: String!, type: String!): Transaction!
+    deleteTransaction(transactionId: Int!): Boolean!
 }
 
 #=== ENTITIES ===

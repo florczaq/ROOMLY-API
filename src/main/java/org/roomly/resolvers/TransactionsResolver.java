@@ -37,5 +37,11 @@ public class TransactionsResolver {
           .toList();
     }
     
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public boolean deleteTransaction (@Argument int transactionId) {
+        transactionsService.deleteTransaction(transactionId);
+        return true;
+    }
 }
 
