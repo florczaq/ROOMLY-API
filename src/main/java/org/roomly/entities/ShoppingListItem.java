@@ -38,15 +38,15 @@ public class ShoppingListItem {
     @Max(1000)
     private int count = 1;
     
-    private boolean purchased = false;
-    
     @Column(name = "added_at")
     private LocalDateTime addedAt = LocalDateTime.now();
     
-    @Column(name = "purchased_at")
-    private LocalDateTime purchasedAt;
-    
+    @Column(length = 1000)
     private String notes;
+    
+    @ManyToOne
+    @JoinColumn(name = "added_by_profile_id")
+    private Profile addedBy;
     
     @PrePersist
     protected void onCreate () {
@@ -60,9 +60,7 @@ public class ShoppingListItem {
           id,
           product.toDTO(),
           count,
-          purchased,
           addedAt,
-          purchasedAt,
           notes
         );
     }

@@ -5,6 +5,7 @@ import org.roomly.entities.Profile;
 import org.roomly.security.authentication.entities.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,12 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     List<Profile> findAllByHouseholdId (String householdId);
     
     Optional<Profile> findByHouseholdAndAccount (Household household, Account account);
+    
+    @Query("SELECT p FROM Profile p WHERE p.household.id = :householdId AND p.account.id = :accountId")
+    Optional<Profile> findByHouseholdIdAndAccountId (
+      @Param("householdId") String householdId,
+      @Param("accountId") String accountId
+    );
     
     Optional<Profile> findProfileById (String id);
     

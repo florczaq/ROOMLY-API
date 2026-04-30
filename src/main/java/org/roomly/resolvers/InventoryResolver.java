@@ -2,9 +2,11 @@ package org.roomly.resolvers;
 
 import lombok.RequiredArgsConstructor;
 import org.roomly.dto.InventoryDTO;
+import org.roomly.dto.InventoryItemDTO;
 import org.roomly.entities.Inventory;
 import org.roomly.services.InventoryService;
 import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -30,6 +32,17 @@ public class InventoryResolver {
           .stream()
           .map(Inventory::toDTO)
           .toList();
+    }
+    
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public InventoryItemDTO addProductToInventory (
+      @Argument int productId,
+      @Argument int inventoryId,
+      @Argument int count,
+      @Argument String notes
+    ) {
+        return inventoryService.addProductToInventory(productId, inventoryId, count, notes).toDTO();
     }
     
 }

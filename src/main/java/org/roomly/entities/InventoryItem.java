@@ -38,6 +38,10 @@ public class InventoryItem {
     @Max(1000)
     private int count = 1;
     
+    @ManyToOne
+    @JoinColumn(name = "added_by_profile_id")
+    private Profile addedBy;
+    
     @Column(name = "added_at")
     private LocalDateTime addedAt = LocalDateTime.now();
     

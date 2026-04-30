@@ -6,9 +6,7 @@ public record ShoppingListItemDTO(
   int id,
   ProductDTO product,
   int count,
-  boolean purchased,
   LocalDateTime addedAt,
-  LocalDateTime purchasedAt,
   String notes
 ) {
 }

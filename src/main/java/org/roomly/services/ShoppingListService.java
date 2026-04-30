@@ -4,12 +4,14 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
-import org.roomly.dto.ProductDTO;
+import org.roomly.annotations.Notifiable;
 import org.roomly.dto.ShoppingListDTO;
-import org.roomly.entities.Household;
-import org.roomly.entities.Profile;
-import org.roomly.entities.ShoppingList;
+import org.roomly.entities.*;
+import org.roomly.repositories.ProductsRepository;
+import org.roomly.repositories.ProfileRepository;
 import org.roomly.repositories.ShoppingListRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class ShoppingListService {
     private final ShoppingListRepository shoppingListRepository;
+    private final ProductsRepository productsRepository;
+    private final ProfileRepository profileRepository;
     
     /**
      * Gets a shopping list for a household and optional owner.
@@ -45,12 +49,50 @@ public class ShoppingListService {
     }
     
     //TODO finish this method - add product to shopping list, create notification for household members, etc.
+    @Notifiable(
+      title = "Product '#{#result.product.name} added to your shopping list",
+      recipientProfileId = "#{#result.shoppingList.owner.id}"
+    )
     @Transactional
-    public ShoppingList addProductToShoppingList (String householdId, ProductDTO product, Profile addedBy) {
+    public ShoppingListItem addProductToShoppingList (int productId,
+      int shoppingListId,
+      int count,
+      @Nullable String notes
+    ) {
+        Product product = productsRepository
+          .findById(productId)
+          .orElseThrow(() -> new EntityNotFoundException("Product not found"));
         
+        ShoppingList shoppingList = shoppingListRepository
+          .findById(shoppingListId)
+          .orElseThrow(() -> new EntityNotFoundException("Shopping list not found"));
         
-        return null;
+        String accountId = getAuthenticatedUserId();
+        
+        Profile addedBy = profileRepository
+          .findByHouseholdIdAndAccountId(shoppingList.getOwner().getHousehold().getId(), accountId)
+          .orElseThrow(() -> new EntityNotFoundException("Profile not found for user: " + accountId));
+        
+        var shoppingListItem = new ShoppingListItem()
+          .setProduct(product)
+          .setCount(count)
+          .setNotes(notes)
+          .setAddedBy(addedBy)
+          .setShoppingList(shoppingList);
+        
+        shoppingList.getItems().add(shoppingListItem);
+        shoppingListRepository.save(shoppingList);
+        
+        return shoppingListItem;
     }
     
+    
+    private String getAuthenticatedUserId () {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("User is not authenticated");
+        }
+        return authentication.getName();
+    }
 }
 
