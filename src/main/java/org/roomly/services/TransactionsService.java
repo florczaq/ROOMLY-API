@@ -52,20 +52,36 @@ public class TransactionsService {
         
     }
     
-    //TODO finish
+    //TODO test
+    @Notifiable(
+      title = "Transaction Deleted: #{#result.title}",
+      description = "#{#result.sender.nickname} deleted a transaction: #{resulty.type == 'EXPENSE' ? '+' : '-'} #{#result.amount}",
+      recipientProfileId = "#{#result.recipient.id}"
+    )
     public Transaction deleteTransaction (int transactionId) {
-        return null;
+        Transaction transaction = this.getTransactionById(transactionId);
+        var currentUserProfileId = profileService.getCurrentlyAuthenticatedUserProfile(
+          transaction.getSender().getHousehold()
+        ).getId();
+        
+        // Only the sender of the transaction can delete it
+        if (!transaction.getSender().getId().equals(currentUserProfileId)) {
+            throw new SecurityException("You are not authorized to delete this transaction.");
+        }
+        
+        return transaction;
     }
     
-    //TODO finish
-    public Transaction getTransactionsByProfileId (String profileId) {
-        return null;
-    }
     
     public List<Transaction> getTransactionsByHouseholdId (String householdId) {
         Household household = householdRepository.findById(householdId)
           .orElseThrow(() -> new EntityNotFoundException("Household not found with id: " + householdId));
         String profileId = profileService.getCurrentlyAuthenticatedUserProfile(household).getId();
         return transactionsRepository.findAllProfilesTransactions(profileId);
+    }
+    
+    private Transaction getTransactionById (int transactionId) {
+        return transactionsRepository.findById(transactionId)
+          .orElseThrow(() -> new EntityNotFoundException("Transaction not found with id: " + transactionId));
     }
 }
