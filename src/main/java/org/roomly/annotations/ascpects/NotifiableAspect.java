@@ -54,14 +54,16 @@ public class NotifiableAspect {
             throw new IllegalArgumentException("Notification title cannot be null or empty");
         }
         
-        if (description == null || description.isEmpty()) {
-            throw new IllegalArgumentException("Notification description cannot be null or empty");
+        if (description == null) {
+            throw new IllegalArgumentException("Notification description cannot be null");
         }
         
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("User is not authenticated");
         }
+        
+        //TODO this validation dont work and sends notification to the user itself, need to check if the recipientProfileId belongs to the authenticated user and skip notification if it does
         
         // Notify only if the recipientProfileId does not belong to the authenticated user
         if (profileRepository.existsByIdAndAccountId(recipientProfileId, authentication.getName())) {

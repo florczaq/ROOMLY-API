@@ -3,8 +3,10 @@ package org.roomly.annotations.validators;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import lombok.extern.slf4j.Slf4j;
 import org.roomly.annotations.ValidBarcode;
 
+@Slf4j
 public class BarcodeValidator implements ConstraintValidator<ValidBarcode, String> {
     private String pattern;
     
@@ -15,9 +17,10 @@ public class BarcodeValidator implements ConstraintValidator<ValidBarcode, Strin
     
     @Override
     public boolean isValid (String s, ConstraintValidatorContext constraintValidatorContext) {
-        if (s == null || s.isEmpty()) {
-            return false;
+        log.info("Validating barcode: {}", s);
+        if (s == null) {
+            return true;
         }
-        return s.matches(pattern);
+        return s.trim().matches(pattern);
     }
 }

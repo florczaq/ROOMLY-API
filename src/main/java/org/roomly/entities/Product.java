@@ -24,13 +24,13 @@ public class Product {
     @Column(nullable = false)
     String name;
     
-    @ValidBarcode
     @Column(nullable = false)
     String brand;
     
     String quantity;
     
     @Column(unique = true)
+    @ValidBarcode
     String barcode;
     
     @Enumerated(EnumType.STRING)

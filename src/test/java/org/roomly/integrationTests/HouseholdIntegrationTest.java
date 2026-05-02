@@ -3,17 +3,11 @@ package org.roomly.integrationTests;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.roomly.entities.Household;
-import org.roomly.entities.Inventory;
-import org.roomly.entities.Profile;
-import org.roomly.entities.ShoppingList;
+import org.roomly.entities.*;
 import org.roomly.notifications.dto.NotificationDTO;
 import org.roomly.notifications.entities.Notification;
 import org.roomly.notifications.repositories.NotificationRepository;
-import org.roomly.repositories.HouseholdRepository;
-import org.roomly.repositories.InventoryRepository;
-import org.roomly.repositories.ProfileRepository;
-import org.roomly.repositories.ShoppingListRepository;
+import org.roomly.repositories.*;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.jwt.dto.TokenResponse;
 import org.roomly.security.authentication.repositories.AccountRepository;
@@ -30,8 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,6 +59,9 @@ class HouseholdIntegrationTest {
     @Autowired
     private NotificationRepository notificationRepository;
     
+    @Autowired
+    private ProductsRepository productRepository;
+    
     @BeforeEach
     void setUp () {
         // Set up MockMvc with security
@@ -81,6 +77,13 @@ class HouseholdIntegrationTest {
         inventoryRepository.deleteAll();
         shoppingListRepository.deleteAll();
         notificationRepository.deleteAll();
+        productRepository.deleteAll();
+        productRepository.save(new Product()
+          .setBarcode("5901939103099")
+          .setName("JOGURT SKYR PITNY JAGODA 330ML PIATNICA")
+          .setBrand("Piatnica")
+          .setQuantity("330ml")
+        );
     }
     
     @Test
@@ -298,6 +301,14 @@ class HouseholdIntegrationTest {
         
         System.out.println("✓ Device User 1 joined household");
         System.out.println("  Response: " + device1JoinResult.getResponse().getContentAsString());
+        String device1JoinResponse = device1JoinResult.getResponse().getContentAsString();
+        
+        Map<String, Object> device1GraphqlResponse = objectMapper.readValue(device1JoinResponse, Map.class);
+        Map<String, Object> device1JoinData = (Map<String, Object>) ((Map<String, Object>) device1GraphqlResponse.get(
+          "data")).get("joinHousehold");
+        Map<String, Object> device1InventoryData = (Map<String, Object>) device1JoinData.get("inventory");
+        int device1InventoryId = (int) device1InventoryData.get("id");
+        
         
         // Verify inventory and shopping list were created for Device User 1
         List<Inventory> inventoriesAfterMember1 = inventoryRepository.findAllByHousehold(household);
@@ -385,8 +396,8 @@ class HouseholdIntegrationTest {
         for (Inventory inventory : allInventories) {
             String ownerInfo = inventory.getOwner() != null
                                ? inventory.getOwner().getNickname() + " (ID: " + inventory
-              .getOwner()
-              .getId() + ")"
+                                                                                 .getOwner()
+                                                                                 .getId() + ")"
                                : "SHARED";
             System.out.println("  - Inventory ID: " + inventory.getId() + ", Owner: " + ownerInfo);
         }
@@ -396,8 +407,8 @@ class HouseholdIntegrationTest {
         for (ShoppingList shoppingList : allShoppingLists) {
             String ownerInfo = shoppingList.getOwner() != null
                                ? shoppingList.getOwner().getNickname() + " (ID: " + shoppingList
-              .getOwner()
-              .getId() + ")"
+                                                                                    .getOwner()
+                                                                                    .getId() + ")"
                                : "SHARED";
             System.out.println("  - Shopping List ID: " + shoppingList.getId() + ", Owner: " + ownerInfo);
         }
@@ -440,6 +451,56 @@ class HouseholdIntegrationTest {
         long finalMemberShoppingLists = allShoppingLists.stream().filter(sl -> sl.getOwner() != null).count();
         assertEquals(1, finalSharedShoppingLists, "Should have 1 shared shopping list");
         assertEquals(3, finalMemberShoppingLists, "Should have 3 member shopping lists");
+        
+        //Add product to other user inventory and verify it was added correctly
+        int productId = productRepository.findByBarcode("5901939103099").orElseThrow().getId();
+        
+        String user2AddProductToUser1Inventory = String.format(
+          """
+                    {
+                        "query": "mutation { addProductToInventory(productId: %d, inventoryId: %d, count: 1, notes: \\"Przez 2 dla 1\\"){notes} }"
+                    }
+          """, productId, device1InventoryId
+        );
+        
+        MvcResult addProductResult = mockMvc.perform(post("/graphql")
+            .header("Authorization", "Bearer " + device2Tokens.accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(user2AddProductToUser1Inventory))
+          .andExpect(status().isOk())
+          .andReturn();
+        
+        assertFalse(
+          addProductResult.getResponse().getContentAsString().contains("errors"),
+          "Should not have errors when adding product to another user's inventory"
+        );
+        
+        System.out.println("\n✓ Product added to another user's inventory successfully");
+        System.out.printf("Response: %s%n", addProductResult.getResponse().getContentAsString());
+        
+        
+        String user1AddProductToUser1Inventory = String.format(
+          """
+                    {
+                        "query": "mutation { addProductToInventory(productId: %d, inventoryId: %d, count: 1, notes: \\"Przez 2 dla 1\\"){notes} }"
+                    }
+          """, productId, device1InventoryId
+        );
+        
+        MvcResult addProductResult2 = mockMvc.perform(post("/graphql")
+            .header("Authorization", "Bearer " + device1Tokens.accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(user1AddProductToUser1Inventory))
+          .andExpect(status().isOk())
+          .andReturn();
+        
+        assertFalse(
+          addProductResult2.getResponse().getContentAsString().contains("errors"),
+          "Should not have errors when adding product to users own inventory"
+        );
+        
+        System.out.println("\n✓ Product added to another user's inventory successfully");
+        System.out.printf("Response: %s%n", addProductResult.getResponse().getContentAsString());
         
         System.out.println("\n✓ All assertions passed!");
         System.out.println("  ✓ Household structure verified");

@@ -38,7 +38,7 @@ public class InventoryService {
     //TODO finish this method - add product to shopping list, create notification for household members, etc.
     @Notifiable(
       title = "Product '#{#result.product.name} added to your inventory",
-      recipientProfileId = "#{#result.shoppingList.owner.id}"
+      recipientProfileId = "#{#result.inventory.owner.id}"
     )
     @Transactional
     public InventoryItem addProductToInventory (int productId,
