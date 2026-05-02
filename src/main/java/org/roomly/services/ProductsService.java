@@ -55,4 +55,3 @@ public class ProductsService {
         return product.orElseGet(() -> this.fetchProduct(barcode));
     }
 }
-

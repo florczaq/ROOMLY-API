@@ -35,7 +35,6 @@ public class InventoryService {
         return inventoryRepository.findAllByHouseholdId(householdId);
     }
     
-    //TODO finish this method - add product to shopping list, create notification for household members, etc.
     @Notifiable(
       title = "Product '#{#result.product.name} added to your inventory",
       recipientProfileId = "#{#result.inventory.owner.id}"

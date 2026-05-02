@@ -48,7 +48,6 @@ public class ShoppingListService {
         return shoppingListRepository.save(new ShoppingList().setOwner(profile));
     }
     
-    //TODO finish this method - add product to shopping list, create notification for household members, etc.
     @Notifiable(
       title = "Product '#{#result.product.name} added to your shopping list",
       recipientProfileId = "#{#result.shoppingList.owner.id}"

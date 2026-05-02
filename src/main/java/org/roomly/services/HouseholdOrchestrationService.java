@@ -102,7 +102,6 @@ public class HouseholdOrchestrationService {
      * Adds a new member to an existing household with validation and resource creation.
      * This is an atomic operation.
      */
-    //TODO test if annotation works correctly and only sends notification to household owner, not to the user who just joined
     @Notifiable(
       title = "New Household Member",
       description = "#{#result.nickname} has joined your household ",
