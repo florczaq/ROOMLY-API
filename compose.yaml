@@ -1,9 +1,42 @@
 services:
   postgres:
-    image: 'postgres:latest'
+    image: postgres:16
+    container_name: roomly-postgres
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      POSTGRES_DB: ${POSTGRES_DB:-roomlydb}
+      POSTGRES_USER: ${POSTGRES_USER:-roomly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-roomly}
     ports:
-      - '5432'
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-roomly} -d ${POSTGRES_DB:-roomlydb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: roomly-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-secret-key}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-roomlydb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-roomly}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-roomly}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      AVATAR_STORAGE_PATH: /app/assets/avatars
+      COLORS_STORAGE_PATH: /app/assets/colors
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

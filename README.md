@@ -36,13 +36,13 @@ The project has a comprehensive implementation with:
 - **Multi-tenant household system** with secure join codes and member management
 - **User profile management** with customizable avatars and colors
 - **Product lookup** integration with OpenFoodFacts API
-- **Shopping list management** with purchase tracking and notes
+- **Shopping list management** with item tracking and notes
 - **Inventory management** with item tracking and timestamps
 - **Event scheduling** with attendees, date filtering, and CRUD operations
-- **Transaction tracking** for household financial management
+- **Transaction tracking** for household financial management (add/delete)
 - **Complete database schema** with 11 interconnected entities
 - **JWT-based authentication** with refresh token support
-- **Comprehensive GraphQL API** with 13 queries and 12 mutations
+- **Comprehensive GraphQL API** with 13 queries and 13 mutations
 
 ### Core Architecture
 
@@ -82,24 +82,25 @@ The project has a comprehensive implementation with:
 - ✅ Barcode-based product search via GraphQL
 - ✅ Integration with OpenFoodFacts API
 - ✅ Retrieve product details (name, brand, quantity)
-- 🚧 Get product by barcode query (schema defined)
+- ✅ Get product by barcode query
 
 ### 🛒 Shopping List Management
 - ✅ GraphQL schema for shopping lists defined
 - ✅ Query individual shopping list by ID
 - ✅ Query all shopping lists for a household
-- ✅ Add products to shopping list by product ID
-- ✅ Shopping list items with purchase tracking
+- ✅ Add products to shopping list by product and list ID
+- ✅ Shopping list items with count tracking
 - ✅ Notes support for shopping list items
+- ✅ Timestamp tracking for added items
 
 ### 📦 Inventory Management
 - ✅ GraphQL schema for inventory defined
 - ✅ Query individual inventory by ID
 - ✅ Query all inventories for a household
-- ✅ Add products to inventory by product ID
+- ✅ Add products to inventory by product and inventory ID
 - ✅ Inventory items with count tracking
 - ✅ Notes support for inventory items
-- ✅ Timestamp tracking for inventory additions
+- ✅ Timestamp tracking for added items
 
 ### 📅 Event Management
 - ✅ GraphQL schema for events defined
@@ -116,6 +117,7 @@ The project has a comprehensive implementation with:
 - ✅ GraphQL schema for transactions defined
 - ✅ Query all transactions for a household
 - ✅ Add new transactions
+- ✅ Delete transactions
 - ✅ Track sender and recipient profiles
 - ✅ Transaction types (INCOME/EXPENSE)
 - ✅ Amount and timestamp tracking
@@ -127,12 +129,12 @@ All entities are fully implemented and exposed via GraphQL API:
 - ✅ Household (organizational unit) - with GraphQL queries/mutations
 - ✅ RefreshToken (JWT security)
 - ✅ Shopping Lists (personal and shared) - with GraphQL queries/mutations
-- ✅ Shopping List Items with purchase tracking - with GraphQL mutations
+- ✅ Shopping List Items with timestamp tracking - with GraphQL mutations
 - ✅ Products with barcode support - with GraphQL queries
 - ✅ Inventory (personal and shared) - with GraphQL queries/mutations
-- ✅ Inventory Items - with GraphQL mutations
+- ✅ Inventory Items with timestamp tracking - with GraphQL mutations
 - ✅ Events with attendee management - with GraphQL queries/mutations
-- ✅ Transactions (financial tracking) - with GraphQL queries/mutations
+- ✅ Transactions (financial tracking) - with GraphQL queries/mutations (add & delete)
 - ⚠️ Notifications (basic structure) - entity only, no GraphQL API yet
 
 ---
@@ -152,10 +154,12 @@ All entities are fully implemented and exposed via GraphQL API:
 ### Key Dependencies
 - Spring Boot Starter Web MVC
 - Spring Boot Starter GraphQL
+- GraphQL Java Extended Scalars (DateTime support)
 - Spring Boot Starter Security
 - Spring Boot Starter Data JPA
 - Spring Boot Starter Validation
 - Spring Boot Starter WebFlux (for external API calls)
+- Spring Boot Starter Cache + Caffeine
 - JWT (io.jsonwebtoken:jjwt 0.12.6)
 - Lombok
 - H2 Database (development)
@@ -247,7 +251,7 @@ PostgreSQL driver is included and can be configured in `application.properties` 
 
 ### GraphQL API
 
-The application exposes a comprehensive GraphQL API with 13 queries and 12 mutations covering all major household management operations including households, profiles, shopping lists, inventory, events, and transactions.
+The application exposes a comprehensive GraphQL API with 13 queries and 13 mutations covering all major household management operations including households, profiles, shopping lists, inventory, events, and transactions.
 
 #### Available Queries
 
@@ -269,7 +273,7 @@ type Query {
     allInventories(householdId: String!): [Inventory]!
     
     # Product queries
-    getProductByBarcode(barcode: String!): Product
+    product(barcode: String!): Product
     
     # Avatar and color queries
     availableAvatarsAndColors: AvatarsAndColors!
@@ -313,17 +317,17 @@ type Mutation {
     leaveHousehold(profileId: String!): Boolean!
     
     # Shopping list mutations
-    addProductToShoppingList: Int
-    addProductToShoppingListById(
+    addProductToShoppingList(
         productId: Int!
+        shoppingListId: Int!
         count: Int!
         notes: String
     ): ShoppingListItem!
     
     # Inventory mutations
-    addProductToInventory: Int
-    addProductToInventoryById(
+    addProductToInventory(
         productId: Int!
+        inventoryId: Int!
         count: Int!
         notes: String
     ): InventoryItem!
@@ -351,6 +355,7 @@ type Mutation {
         recipientId: String!
         type: String!
     ): Transaction!
+    deleteTransaction(transactionId: Int!): Boolean!
 }
 ```
 
@@ -412,9 +417,7 @@ type ShoppingListItem {
     id: Int!
     product: Product!
     count: Int!
-    purchased: Boolean!
     addedAt: String!
-    purchasedAt: String
     notes: String
 }
 
@@ -570,7 +573,7 @@ query {
                     name
                 }
                 count
-                purchased
+                addedAt
             }
         }
     }
@@ -614,7 +617,6 @@ query {
                 barcode
             }
             count
-            purchased
             addedAt
             notes
         }
@@ -634,7 +636,7 @@ query {
                 name
             }
             count
-            purchased
+            addedAt
         }
     }
 }
@@ -644,8 +646,9 @@ query {
 
 ```graphql
 mutation {
-    addProductToShoppingListById(
+    addProductToShoppingList(
         productId: 123
+        shoppingListId: 1
         count: 2
         notes: "Get organic if available"
     ) {
@@ -655,7 +658,7 @@ mutation {
             brand
         }
         count
-        purchased
+        addedAt
         notes
     }
 }
@@ -704,8 +707,9 @@ query {
 
 ```graphql
 mutation {
-    addProductToInventoryById(
+    addProductToInventory(
         productId: 123
+        inventoryId: 1
         count: 5
         notes: "Stored in pantry"
     ) {
@@ -715,6 +719,7 @@ mutation {
             brand
         }
         count
+        addedAt
         notes
     }
 }
@@ -726,7 +731,7 @@ mutation {
 
 ```graphql
 query {
-    getProductByBarcode(barcode: "3017620422003") {
+    product(barcode: "3017620422003") {
         id
         barcode
         name
@@ -893,6 +898,14 @@ mutation {
 }
 ```
 
+**Delete Transaction**
+
+```graphql
+mutation {
+    deleteTransaction(transactionId: 1)
+}
+```
+
 ---
 
 ## 🗄️ Database Schema
@@ -924,7 +937,7 @@ mutation {
 
 #### ShoppingListItem
 - References a Product
-- Tracks count, purchase status, timestamps
+- Tracks count and timestamps
 - Added by user tracking
 - Optional notes
 
@@ -1095,15 +1108,15 @@ Test reports are generated in: `build/reports/tests/test/index.html`
 - ✅ Shopping list entity model
 - ✅ Shopping list items with product references
 - ✅ GraphQL queries (single and all lists)
-- ✅ Add items to shopping list mutation
-- ✅ Purchase status tracking
+- ✅ Add items to shopping list mutation (with list ID)
+- ✅ Count tracking
 - ✅ Item notes and timestamps
 
 ### Inventory ✅
 - ✅ Inventory entity model
 - ✅ Inventory items with product references
 - ✅ GraphQL queries (single and all inventories)
-- ✅ Add items to inventory mutation
+- ✅ Add items to inventory mutation (with inventory ID)
 - ✅ Count tracking
 - ✅ Item notes and timestamps
 
@@ -1119,6 +1132,7 @@ Test reports are generated in: `build/reports/tests/test/index.html`
 - ✅ Transaction entity model
 - ✅ GraphQL query for household transactions
 - ✅ Add transaction mutation
+- ✅ Delete transaction mutation
 - ✅ Sender/recipient profile tracking
 - ✅ Transaction types (INCOME/EXPENSE)
 - ✅ Amount and timestamp tracking
@@ -1142,6 +1156,7 @@ ROOMLY/
 │   │   │   │   ├── Event.java
 │   │   │   │   ├── Household.java
 │   │   │   │   ├── Inventory.java
+│   │   │   │   ├── InventoryItem.java
 │   │   │   │   ├── Product.java
 │   │   │   │   ├── Profile.java
 │   │   │   │   ├── ShoppingList.java
@@ -1152,8 +1167,11 @@ ROOMLY/
 │   │   │   ├── notifications/       # Notification system
 │   │   │   ├── repositories/        # Data repositories
 │   │   │   │   ├── EventsRepository.java
+│   │   │   │   ├── HouseholdRepository.java
 │   │   │   │   ├── InventoryRepository.java
 │   │   │   │   ├── ProductsRepository.java
+│   │   │   │   ├── ProfileRepository.java
+│   │   │   │   ├── ShoppingListItemRepository.java
 │   │   │   │   ├── ShoppingListRepository.java
 │   │   │   │   └── TransactionsRepository.java
 │   │   │   ├── resolvers/           # GraphQL resolvers
@@ -1162,17 +1180,25 @@ ROOMLY/
 │   │   │   │   ├── HouseholdResolver.java
 │   │   │   │   ├── InventoryResolver.java
 │   │   │   │   ├── ProductsResolver.java
+│   │   │   │   ├── ProfileResolver.java
 │   │   │   │   ├── ShoppingListResolver.java
 │   │   │   │   └── TransactionsResolver.java
 │   │   │   ├── security/            # Security & authentication
+│   │   │   ├── cache/               # Custom LFU cache
+│   │   │   │   ├── FrequencyTracker.java
+│   │   │   │   ├── LfuCache.java
+│   │   │   │   └── LfuCacheManager.java
 │   │   │   └── services/            # Business logic
 │   │   │       ├── AvatarService.java
 │   │   │       ├── ColorsService.java
 │   │   │       ├── EventsService.java
 │   │   │       ├── ExternalApiService.java
+│   │   │       ├── HouseholdOrchestrationService.java
 │   │   │       ├── HouseholdService.java
 │   │   │       ├── InventoryService.java
 │   │   │       ├── ProductsService.java
+│   │   │       ├── ProfileService.java
+│   │   │       ├── ShoppingListItemService.java
 │   │   │       ├── ShoppingListService.java
 │   │   │       └── TransactionsService.java
 │   │   └── resources/
@@ -1183,8 +1209,11 @@ ROOMLY/
 │   └── test/
 │       └── java/org/roomly/
 │           ├── RoomlyApplicationTests.java
+│           ├── cache/
+│           │   └── FrequencyTrackerTest.java
 │           └── integrationTests/
 │               ├── AvatarsIntegrationTest.java
+│               ├── CacheEvictionTest.java
 │               └── HouseholdIntegrationTest.java
 ├── build.gradle                      # Gradle build configuration
 ├── settings.gradle
@@ -1240,9 +1269,9 @@ For questions and support, please contact the project maintainer or open an issu
 
 ## 📊 Project Status
 
-**Current Version**: 0.0.1  
+**Current Version**: 1.0.0  
 **Status**: 🚧 In Active Development  
-**Last Updated**: April 26, 2026
+**Last Updated**: May 3, 2026
 
 ### Implementation Status
 
@@ -1264,9 +1293,10 @@ For questions and support, please contact the project maintainer or open an issu
 - **Framework**: Spring Boot 4.0.5
 - **Language**: Java 21
 - **Database**: H2 (development), PostgreSQL (production-ready)
-- **API**: GraphQL with 13 queries and 12 mutations
+- **API**: GraphQL with 13 queries and 13 mutations
 - **Security**: JWT with refresh token rotation
 - **Build Tool**: Gradle 8.x
+- **Caching**: Custom LFU cache implementation with Caffeine
 - **Custom Scalars**: DateTime support for event scheduling
 - **Architecture**: Multi-tenant with household-based data isolation
 
