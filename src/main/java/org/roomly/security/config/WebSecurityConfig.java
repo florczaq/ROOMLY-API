@@ -1,5 +1,6 @@
 package org.roomly.security.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.roomly.security.authentication.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +35,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
         http
           .csrf(AbstractHttpConfigurer::disable)
           .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          .exceptionHandling(ex -> ex.authenticationEntryPoint(
+            (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+          ))
           .authorizeHttpRequests(auth ->
             auth
               // "open" endpoints are accessible without authentication for testing purposes,

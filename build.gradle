@@ -18,6 +18,10 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    mockitoAgent
+}
+
 ext {
     projectName = 'ROOMLY'
     projectDescription = 'A household management system built with Spring Boot and GraphQL, featuring multi-tenant household organization, user profiles with customizable avatars, and product lookup integration.'
@@ -55,15 +59,21 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.graphql:spring-graphql-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
     runtimeOnly 'com.h2database:h2'
 
+    mockitoAgent('org.mockito:mockito-core') {
+        transitive = false
+    }
+
 
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    jvmArgs "-javaagent:${configurations.mockitoAgent.singleFile}"
 }

@@ -13,4 +13,10 @@ public class GlobalExceptionHandler {
         log.error("An error occurred: {}", ex.getMessage());
         return ResponseEntity.badRequest().body("An error occurred: " + ex.getMessage());
     }
+    
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<String> handleSecurityExceptions (SecurityException ex) {
+        log.warn("Unauthorized access attempt: {}", ex.getMessage());
+        return ResponseEntity.status(401).body("Unauthorized access: " + ex.getMessage());
+    }
 }

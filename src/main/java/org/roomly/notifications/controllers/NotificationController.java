@@ -15,7 +15,7 @@ public class NotificationController {
     private final NotificationService notificationService;
     
     @GetMapping
-    public List<NotificationDTO> getNotificationsForAccount () {
+    public List<NotificationDTO> getNotificationsForAccount () throws SecurityException {
         return notificationService
           .getNotificationsForAccount()
           .stream()

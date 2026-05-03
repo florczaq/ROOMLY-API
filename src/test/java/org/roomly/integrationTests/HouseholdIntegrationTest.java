@@ -588,6 +588,28 @@ class HouseholdIntegrationTest {
           .stream()
           .map(Notification::toDto)
           .toList();
+        assertFalse(notifications.isEmpty(), "Expected notifications to be generated during household flow");
+
+        String ownerProfileId = profiles.stream()
+          .filter(p -> "HomeOwner".equals(p.getNickname()))
+          .findFirst()
+          .orElseThrow()
+          .getId();
+        assertTrue(
+          notifications.stream().anyMatch(n -> ownerProfileId.equals(n.profileId())),
+          "Expected at least one notification for household owner"
+        );
+
+        String deviceUser1ProfileId = profiles.stream()
+          .filter(p -> "DeviceUser1".equals(p.getNickname()))
+          .findFirst()
+          .orElseThrow()
+          .getId();
+        assertTrue(
+          notifications.stream().anyMatch(n -> deviceUser1ProfileId.equals(n.profileId())),
+          "Expected at least one notification for DeviceUser1 after cross-inventory operation"
+        );
+
         System.out.println("\nNotifications in the system:");
         for (NotificationDTO notification : notifications) {
             System.out.println("  - Notification ID: " + notification.id());
