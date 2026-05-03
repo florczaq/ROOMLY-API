@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.roomly.utils.AvatarsUtil;
 import org.roomly.utils.ColorsUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
@@ -62,6 +63,7 @@ public class AvatarService {
         }
     }
     
+    @Cacheable(value = "avatars", key = "#name.toUpperCase() + '_' + #color.toUpperCase()")
     public byte[] loadAvatarFromStorage (String name, String color) throws IOException {
         if (color.contains("#")) {
             color = ColorsUtil.getColorByHex(color);

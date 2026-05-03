@@ -1,5 +1,5 @@
 scalar DateTime
-
+# todo enpoint for logs and monitoring
 type Query{
     #=== HOUSEHOLD ===
     household(householdId: String!): Household!

@@ -12,7 +12,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class AvatarController {
     private final AvatarService avatarService;
-    
+
     @GetMapping(value = "/{name}", produces = {"image/png", "image/jpeg"})
     public ResponseEntity<byte[]> getAvatar (@PathVariable String name,
       @RequestParam(name = "color", required = false) String color,

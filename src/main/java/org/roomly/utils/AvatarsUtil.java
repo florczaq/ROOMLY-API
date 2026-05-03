@@ -1,8 +1,11 @@
 package org.roomly.utils;
 
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 
+@Slf4j
 public final class AvatarsUtil {
     private static List<String> availableAvatars;
     
@@ -12,6 +15,7 @@ public final class AvatarsUtil {
     }
     
     public static void initialize (List<String> avatars) {
+        log.info("Initializing available avatars with: {}", avatars);
         if (avatars == null || avatars.isEmpty()) {
             throw new IllegalArgumentException("Available avatars list cannot be null or empty");
         }
