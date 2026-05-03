@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/avatars")
+@RequestMapping("/open/api/avatars")
 @RequiredArgsConstructor
 public class AvatarController {
     private final AvatarService avatarService;
