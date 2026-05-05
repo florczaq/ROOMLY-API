@@ -106,7 +106,7 @@ class NotificationIntegrationTest {
     }
     
     private List<NotificationDTO> getNotifications (String accessToken) throws Exception {
-        MvcResult result = mockMvc.perform(get("/notifications")
+        MvcResult result = mockMvc.perform(get("/api/notifications")
             .header("Authorization", "Bearer " + accessToken))
           .andExpect(status().isOk())
           .andReturn();
@@ -117,11 +117,94 @@ class NotificationIntegrationTest {
         );
     }
     
+    private record HouseholdContext(
+      TokenResponse ownerTokens,
+      TokenResponse memberTokens,
+      String householdId,
+      String memberProfileId
+    ) {}
+
+    private TokenResponse registerUser (String email, String password) throws Exception {
+        MvcResult reg = mockMvc.perform(post("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(Map.of("email", email, "password", password))))
+          .andExpect(status().isOk())
+          .andReturn();
+
+        return objectMapper.readValue(reg.getResponse().getContentAsString(), TokenResponse.class);
+    }
+
+    private TokenResponse loginUser (String email, String password) throws Exception {
+        MvcResult login = mockMvc.perform(post("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(Map.of("email", email, "password", password))))
+          .andExpect(status().isOk())
+          .andReturn();
+
+        return objectMapper.readValue(login.getResponse().getContentAsString(), TokenResponse.class);
+    }
+
+    private HouseholdContext createHouseholdWithTwoMembers (
+      String ownerEmail,
+      String ownerNickname,
+      String memberEmail,
+      String memberNickname
+    ) throws Exception {
+        TokenResponse ownerTokens = registerUser(ownerEmail, "Password123");
+
+        String createHouseholdMutation = String.format(
+          """
+          {
+              "query": "mutation { createHousehold(name: \\\"Home\\\", membersLimit: 5, nickname: \\\"%s\\\", avatarName: \\\"Cat\\\", avatarColorName: \\\"blue\\\") { id joinCode } }"
+          }
+          """, ownerNickname
+        );
+
+        MvcResult ownerCreateResult = mockMvc.perform(post("/graphql")
+            .header("Authorization", "Bearer " + ownerTokens.accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(createHouseholdMutation))
+          .andExpect(status().isOk())
+          .andReturn();
+
+        Map<String, Object> ownerPayload = objectMapper.readValue(ownerCreateResult.getResponse().getContentAsString(), Map.class);
+        Map<String, Object> ownerData = (Map<String, Object>) ownerPayload.get("data");
+        Map<String, Object> createdHousehold = (Map<String, Object>) ownerData.get("createHousehold");
+        String householdId = (String) createdHousehold.get("id");
+        String joinCode = (String) createdHousehold.get("joinCode");
+
+        TokenResponse memberTokens = registerUser(memberEmail, "Password123");
+
+        String joinHouseholdMutation = String.format(
+          """
+          {
+              "query": "mutation { joinHousehold(nickname: \\\"%s\\\", avatarName: \\\"Dog\\\", avatarColorName: \\\"white\\\", joinCode: \\\"%s\\\") { id } }"
+          }
+          """, memberNickname, joinCode
+        );
+
+        mockMvc.perform(post("/graphql")
+            .header("Authorization", "Bearer " + memberTokens.accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(joinHouseholdMutation))
+          .andExpect(status().isOk());
+
+        TokenResponse refreshedMemberTokens = loginUser(memberEmail, "Password123");
+
+        String memberProfileId = profileRepository.findAll().stream()
+          .filter(p -> p.getAccount().getEmail().equals(memberEmail))
+          .findFirst()
+          .orElseThrow()
+          .getId();
+
+        return new HouseholdContext(ownerTokens, refreshedMemberTokens, householdId, memberProfileId);
+    }
+
     // ─── tests ────────────────────────────────────────────────────────────────
     
     @Test
     void getNotifications_unauthenticated_returns401 () throws Exception {
-        mockMvc.perform(get("/notifications"))
+        mockMvc.perform(get("/api/notifications"))
           .andExpect(status().isUnauthorized());
     }
     
@@ -208,7 +291,7 @@ class NotificationIntegrationTest {
         List<String> toMark = before.stream().map(NotificationDTO::id).limit(2).toList();
         System.out.println("  Marking as read: " + toMark);
         
-        mockMvc.perform(post("/notifications/markAsRead")
+        mockMvc.perform(post("/api/notifications/markAsRead")
             .header("Authorization", "Bearer " + tokens.accessToken())
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(toMark)))
@@ -245,7 +328,7 @@ class NotificationIntegrationTest {
         List<NotificationDTO> all = getNotifications(tokens.accessToken());
         List<String> allIds = all.stream().map(NotificationDTO::id).toList();
         
-        mockMvc.perform(post("/notifications/markAsRead")
+        mockMvc.perform(post("/api/notifications/markAsRead")
             .header("Authorization", "Bearer " + tokens.accessToken())
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(allIds)))
@@ -281,6 +364,50 @@ class NotificationIntegrationTest {
         
         System.out.println("✓ Notifications are correctly isolated between accounts");
     }
+
+    @Test
+    void addingEventAndTransaction_returnsTransactionNotificationExpressionErrorButKeepsMemberAuthenticated () throws Exception {
+        HouseholdContext context = createHouseholdWithTwoMembers(
+          "owner.notifications@roomly.com",
+          "OwnerNotifications",
+          "member.notifications@roomly.com",
+          "MemberNotifications"
+        );
+
+        String addEventMutation = """
+          {
+              "query": "mutation { addEvent(name: \\\"House Meeting\\\", description: \\\"Weekly sync\\\", startTime: \\\"2030-01-10T18:00:00\\\", endTime: \\\"2030-01-10T19:00:00\\\") { id name } }"
+          }
+          """;
+
+        mockMvc.perform(post("/graphql")
+            .header("Authorization", "Bearer " + context.ownerTokens().accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(addEventMutation))
+          .andExpect(status().isOk());
+
+        String addTransactionMutation = String.format(
+          """
+          {
+              "query": "mutation { addTransaction(title: \\\"Rent Share\\\", amount: 250.0, recipientId: \\\"%s\\\", type: \\\"EXPENSE\\\") { id title amount recipient { id } } }"
+          }
+          """, context.memberProfileId()
+        );
+
+        MvcResult addTransactionResult = mockMvc.perform(post("/graphql")
+            .header("Authorization", "Bearer " + context.ownerTokens().accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(addTransactionMutation))
+          .andExpect(status().isOk())
+          .andReturn();
+
+        String transactionResponse = addTransactionResult.getResponse().getContentAsString();
+        assertTrue(
+          transactionResponse.contains("\"errors\""),
+          "Expected transaction mutation to return GraphQL errors with current notification expression configuration"
+        );
+
+        List<NotificationDTO> memberNotifications = getNotifications(context.memberTokens().accessToken());
+        assertTrue(memberNotifications.isEmpty(), "Expected no notification when transaction mutation returns errors");
+    }
 }
-
-

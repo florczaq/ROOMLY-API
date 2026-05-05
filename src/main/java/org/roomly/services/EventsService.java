@@ -85,7 +85,6 @@ public class EventsService {
         return true;
     }
     
-    //TODO test
     @Notifiable(
       title = "You have been added to an event",
       description = "You have been added as an attendee to the event: #{#result.name}",

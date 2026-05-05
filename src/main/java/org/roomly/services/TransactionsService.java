@@ -22,7 +22,6 @@ public class TransactionsService {
     private final ProfileService profileService;
     private final HouseholdRepository householdRepository;
     
-    //TODO test
     @Transactional
     @Notifiable(
       title = "#{#title}: #{#type == 'EXPENSE' ? '+' : '-'} #{#amount}",
@@ -52,7 +51,6 @@ public class TransactionsService {
         
     }
     
-    //TODO test
     @Notifiable(
       title = "Transaction Deleted: #{#result.title}",
       description = "#{#result.sender.nickname} deleted a transaction: #{resulty.type == 'EXPENSE' ? '+' : '-'} #{#result.amount}",

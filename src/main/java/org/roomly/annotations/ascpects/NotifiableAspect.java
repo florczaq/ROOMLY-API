@@ -40,7 +40,7 @@ public class NotifiableAspect {
         // Create SpEL evaluation context with the result object
         EvaluationContext context = new StandardEvaluationContext();
         context.setVariable("result", result);
-        
+
         // Evaluate SpEL expressions
         String title = evaluateExpression(notifiable.title(), context);
         String description = evaluateExpression(notifiable.description(), context);

@@ -81,8 +81,7 @@ public class AuthenticationService implements UserDetailsService {
             }
         });
         
-        // TODO send activation email with activation link (e.g. /auth/activate?token=...)
-        
+
         Account newAccount = accountRepository.save(account);
         accountRepository.flush();
         return this.generateTokensForUser(newAccount.getId());
