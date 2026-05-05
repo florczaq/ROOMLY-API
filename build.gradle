@@ -28,6 +28,7 @@ ext {
 
     developerName = 'Mikołaj Florczak'
     developerUrl = 'https://github/florczaq'
+    springBootAdminVersion = "4.0.3"
 }
 
 dependencies {
@@ -40,6 +41,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'de.codecentric:spring-boot-admin-starter-client'
+    implementation 'de.codecentric:spring-boot-admin-starter-server'
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.mockito:mockito-core'
 
@@ -71,6 +74,11 @@ dependencies {
     }
 
 
+}
+dependencyManagement {
+    imports {
+        mavenBom "de.codecentric:spring-boot-admin-dependencies:$springBootAdminVersion"
+    }
 }
 
 tasks.named('test') {

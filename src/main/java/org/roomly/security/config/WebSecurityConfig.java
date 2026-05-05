@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.roomly.security.authentication.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,21 +32,36 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     }
     
     @Bean
+    @Order(1)
+    public SecurityFilterChain adminFilterChain (HttpSecurity http) {
+        http
+          .securityMatcher(
+            "/", "/applications/**", "/instances/**", "/actuator/**", "/assets/**",
+            "/favicon.ico", "/manifest.json", "/sw.js"
+          )
+          .csrf(AbstractHttpConfigurer::disable)
+          .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+          .requestCache(AbstractHttpConfigurer::disable)
+          .securityContext(AbstractHttpConfigurer::disable)
+          .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          .formLogin(AbstractHttpConfigurer::disable)
+          .httpBasic(AbstractHttpConfigurer::disable);
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain (HttpSecurity http) {
         http
+          .securityMatcher("/auth/**", "/graphql", "/open/**", "/api/**")
           .csrf(AbstractHttpConfigurer::disable)
           .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .exceptionHandling(ex -> ex.authenticationEntryPoint(
             (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
           ))
-          .authorizeHttpRequests(auth ->
-            auth
-              // "open" endpoints are accessible without authentication for testing purposes,
-              // should be removed in production
-              .requestMatchers("/auth/**", "/graphql", "/open/**")
-              .permitAll()
-              .anyRequest()
-              .authenticated()
+          .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/auth/**", "/graphql", "/open/**").permitAll()
+            .anyRequest().authenticated()
           )
           .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
