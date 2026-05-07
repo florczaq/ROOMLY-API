@@ -19,24 +19,30 @@ import java.util.List;
 public class ShoppingListResolver {
     private final ShoppingListService shoppingListService;
     private final HouseholdService householdService;
-    
+
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    public ShoppingListDTO shoppingList (@Argument int id) {
+    public ShoppingListDTO shoppingList(@Argument int id) {
         return shoppingListService.getShoppingList(id).toDTO();
     }
-    
+
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    public List<ShoppingListDTO> allShoppingLists (@Argument String householdId) {
+    public List<ShoppingListDTO> allShoppingLists(@Argument String householdId) {
         Household household = householdService.getHousehold(householdId);
         return shoppingListService.getAllShoppingLists(household);
     }
-    
+
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public ShoppingListItemDTO addProductToShoppingList (@Argument int productId, @Argument int shoppingListId, @Argument int count, @Argument String notes) {
+    public ShoppingListItemDTO addProductToShoppingList(@Argument int productId, @Argument int shoppingListId, @Argument int count, @Argument String notes) {
         return shoppingListService.addProductToShoppingList(productId, shoppingListId, count, notes).toDTO();
+    }
+
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public ShoppingListItemDTO removeProductFromShoppingList(@Argument int productId, @Argument int shoppingListId, @Argument int count, @Argument String notes) {
+        return shoppingListService.removeProductFromShoppingList(productId, shoppingListId, count, notes).toDTO();
     }
 }
 

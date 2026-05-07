@@ -17,33 +17,44 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InventoryResolver {
     private final InventoryService inventoryService;
-    
+
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    public InventoryDTO inventory (@Argument int id) {
+    public InventoryDTO inventory(@Argument int id) {
         return inventoryService.getInventory(id).toDTO();
     }
-    
+
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    public List<InventoryDTO> allInventories (@Argument String householdId) {
+    public List<InventoryDTO> allInventories(@Argument String householdId) {
         return inventoryService
-          .getInventories(householdId)
-          .stream()
-          .map(Inventory::toDTO)
-          .toList();
+            .getInventories(householdId)
+            .stream()
+            .map(Inventory::toDTO)
+            .toList();
     }
-    
+
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public InventoryItemDTO addProductToInventory (
-      @Argument int productId,
-      @Argument int inventoryId,
-      @Argument int count,
-      @Argument String notes
+    public InventoryItemDTO addProductToInventory(
+        @Argument int productId,
+        @Argument int inventoryId,
+        @Argument int count,
+        @Argument String notes
     ) {
         return inventoryService.addProductToInventory(productId, inventoryId, count, notes).toDTO();
     }
-    
+
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public InventoryItemDTO removeProductFromInventory(
+        @Argument int productId,
+        @Argument int inventoryId,
+        @Argument int count,
+        @Argument String notes
+    ) {
+        return inventoryService.removeProductFromInventory(productId, inventoryId, count, notes).toDTO();
+    }
+
 }
 
