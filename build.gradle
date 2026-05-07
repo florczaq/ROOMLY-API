@@ -32,42 +32,59 @@ ext {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // === WEB ===
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // === SECURITY ===
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // === GRAPHQL ===
     implementation 'org.springframework.boot:spring-boot-starter-graphql'
     implementation 'com.graphql-java:graphql-java-extended-scalars:21.0'
+
+    // === DATA ===
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
+
+    // === JSON ===
     implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-    implementation 'de.codecentric:spring-boot-admin-starter-client'
-    implementation 'de.codecentric:spring-boot-admin-starter-server'
-    testImplementation 'io.projectreactor:reactor-test'
-    testImplementation 'org.mockito:mockito-core'
 
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
+    // === VALIDATION ===
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
+    // === CACHE ===
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
-    runtimeOnly 'org.postgresql:postgresql'
+    // === JWT ===
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.graphql:spring-graphql-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    // === SPRING BOOT ADMIN ===
+    implementation 'de.codecentric:spring-boot-admin-starter-client'
+    implementation 'de.codecentric:spring-boot-admin-starter-server'
 
+    // === DEVELOPMENT ===
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // === LOMBOK ===
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    runtimeOnly 'com.h2database:h2'
+    // === TESTING ===
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    testImplementation 'org.springframework.graphql:spring-graphql-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 
     mockitoAgent('org.mockito:mockito-core') {
         transitive = false
