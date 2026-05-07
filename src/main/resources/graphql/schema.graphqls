@@ -42,10 +42,12 @@ type Mutation {
 
     #=== SHOPPING LIST ===
     addProductToShoppingList(productId: Int!, shoppingListId: Int!, count: Int!, notes: String): ShoppingListItem!
+    removeProductFromShoppingList(productId: Int!, shoppingListId: Int!,  count: Int!, notes: String): ShoppingListItem!
+
 
     #=== INVENTORY ===
     addProductToInventory(productId: Int!, inventoryId: Int!,  count: Int!, notes: String): InventoryItem!
-
+    removeProductFromInventory(productId: Int!, inventoryId: Int!,  count: Int!, notes: String): InventoryItem!
     #=== AVATARS AND COLORS ===
 
     #=== EVENTS ===
