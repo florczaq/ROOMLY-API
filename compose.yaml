@@ -30,8 +30,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-roomlydb}
       POSTGRES_USER: ${POSTGRES_USER:-roomly}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-roomly}
-      AVATAR_STORAGE_PATH: /app/assets/avatars
-      COLORS_STORAGE_PATH: /app/assets/colors
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-roomlydb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-roomly}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-roomly}
     ports:
       - "8080:8080"
     restart: unless-stopped
