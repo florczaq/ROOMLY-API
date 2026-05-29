@@ -9,7 +9,7 @@
 > **A comprehensive household management platform** built with Spring Boot and GraphQL, featuring multi-tenant organization, shopping lists, inventory tracking, event scheduling, and transaction management with customizable user profiles.
 
 ---
-
+  
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
