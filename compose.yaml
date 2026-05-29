@@ -37,6 +37,6 @@ services:
       - "8080:8080"
     restart: unless-stopped
     volumes:
-      - ./src/main/java/org/roomly/assets:/app/assets
+      - ./src/main/java/org/roomly/assets:/app/src/main/java/org/roomly/assets
 volumes:
   postgres_data:
