@@ -17,6 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service for managing household and personal inventories and the products within them.
+ * <p>
+ * Each profile and the household itself own an {@link Inventory}. Products are added with
+ * a count (incremented if the item already exists) or removed, decrementing the count and
+ * deleting the {@link InventoryItem} when it reaches zero. Push notifications are sent to
+ * the inventory owner on add and remove operations.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class InventoryService {
@@ -25,19 +34,51 @@ public class InventoryService {
     private final ProfileRepository profileRepository;
     private final InventoryItemRepository inventoryItemRepository;
 
+    /**
+     * Returns the inventory with the given ID.
+     *
+     * @param id inventory ID
+     * @return the matching {@link Inventory}
+     * @throws EntityNotFoundException if no inventory exists with the given ID
+     */
     public Inventory getInventory(int id) {
         return inventoryRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Inventory [" + id + "] not found"));
     }
 
+    /**
+     * Creates and persists a new inventory optionally owned by a profile.
+     * Pass {@code null} for a shared (household-level) inventory.
+     *
+     * @param user the owning profile, or {@code null} for a shared inventory
+     * @return the persisted {@link Inventory}
+     */
     public Inventory createInventory(@Nullable Profile user) {
         return inventoryRepository.save(new Inventory().setOwner(user));
     }
 
+    /**
+     * Returns all inventories (shared and personal) belonging to a household.
+     *
+     * @param householdId ID of the household
+     * @return list of inventories in the household
+     */
     public List<Inventory> getInventories(String householdId) {
         return inventoryRepository.findAllByHouseholdId(householdId);
     }
 
+    /**
+     * Adds a product to an inventory, incrementing the count if the product is already present.
+     * If a non-empty {@code notes} value is provided it overwrites any existing notes.
+     * Sends a push notification to the inventory owner on success.
+     *
+     * @param productId   ID of the product to add
+     * @param inventoryId ID of the target inventory
+     * @param count       quantity to add (must be positive)
+     * @param notes       optional notes to attach to the item
+     * @return the created or updated {@link InventoryItem}
+     * @throws EntityNotFoundException if the product, inventory, or resolved profile does not exist
+     */
     @Notifiable(
         title = "Product '#{#result.product.name} added to your inventory",
         description = "#{#result.addedBy.nickname} added '#{#result.product.name}' to your inventory",
@@ -82,6 +123,19 @@ public class InventoryService {
         return newInventoryItem;
     }
 
+    /**
+     * Removes a quantity of a product from an inventory. If the resulting count is zero or
+     * below, the {@link InventoryItem} is deleted entirely. Sends a push notification to the
+     * inventory owner on success.
+     *
+     * @param productId      ID of the product to remove
+     * @param shoppingListId ID of the inventory (parameter name is misleading — it is an inventory ID)
+     * @param count          quantity to remove (must be greater than 0)
+     * @param notes          optional notes to attach if the item remains
+     * @return the updated (or about-to-be-deleted) {@link InventoryItem}
+     * @throws IllegalArgumentException if {@code count} is not positive
+     * @throws EntityNotFoundException  if the product, inventory, or item is not found
+     */
     @SuppressWarnings("DuplicatedCode")
     @Transactional
     @Notifiable(
@@ -126,6 +180,11 @@ public class InventoryService {
         return inventoryItem;
     }
 
+    /**
+     * Returns the account ID of the currently authenticated user.
+     *
+     * @throws SecurityException if there is no authenticated principal in the security context
+     */
     private String getAuthenticatedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

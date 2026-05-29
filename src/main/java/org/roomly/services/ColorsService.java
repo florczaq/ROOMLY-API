@@ -13,7 +13,13 @@ import java.nio.file.Path;
 import java.util.*;
 
 /**
- * Service that loads color catalog from file and initializes ColorsUtil.
+ * Service that loads the color catalog from a JSON file and initializes {@link ColorsUtil}.
+ * <p>
+ * The catalog maps color names to their hex codes and vice versa. It is read once
+ * at application startup via {@link #init()}. If the file is missing or the JSON is
+ * malformed, {@link ColorsUtil} is initialized with an empty catalog so the application
+ * can still start.
+ * </p>
  */
 @Slf4j
 @Service
@@ -28,8 +34,14 @@ public class ColorsService {
     private String colorsCatalogFilename;
     
     /**
-     * Loads colors catalog from file and initializes ColorsUtil.
-     * If file is missing or invalid, initializes ColorsUtil with empty catalog.
+     * Loads the color catalog from the configured JSON file and initializes {@link ColorsUtil}.
+     * <p>
+     * If the file is missing, {@link ColorsUtil} is initialized with empty maps.
+     * If the JSON is present but invalid, an {@link IOException} is thrown after
+     * still initializing {@link ColorsUtil} with whatever entries were successfully parsed.
+     * </p>
+     *
+     * @throws IOException if the catalog file exists but cannot be read or its JSON is invalid
      */
     @PostConstruct
     public void init () throws IOException {

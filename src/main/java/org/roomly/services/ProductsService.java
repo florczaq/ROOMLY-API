@@ -8,6 +8,15 @@ import org.roomly.repositories.ProductsRepository;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service for product lookup and persistence.
+ * <p>
+ * Products are identified by barcode. When a barcode is not found in the local database,
+ * product data is fetched from the Open Food Facts API via {@link ExternalApiService} and
+ * persisted for future use. Results are cached by barcode to reduce database and network
+ * overhead. Missing fields in the external response fall back to {@code "Unknown"}.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductsService {
@@ -15,7 +24,14 @@ public class ProductsService {
     private final ExternalApiService externalApiService;
     private static final String MISSING_VALUE = "Unknown";
     private static final String PRODUCT_PATH = "product";
-    
+
+    /**
+     * Fetches product data from the external API for the given barcode and persists it.
+     * Called automatically by {@link #getProductByBarcode} on a cache miss.
+     *
+     * @param barcode a valid product barcode
+     * @return the persisted {@link Product}
+     */
     public Product fetchProduct (@ValidBarcode String barcode) {
         var json = externalApiService.fetchProductData(barcode);
         return productsRepository.save(
@@ -49,6 +65,13 @@ public class ProductsService {
         return quantity;
     }
     
+    /**
+     * Returns a product by barcode, fetching and persisting it from the external API on a cache miss.
+     * Results are cached under the {@code products} cache keyed by barcode.
+     *
+     * @param barcode a valid product barcode
+     * @return the matching {@link Product}
+     */
     @Cacheable(value = "products", key = "#barcode")
     public Product getProductByBarcode (@ValidBarcode String barcode) {
         var product = productsRepository.findByBarcode(barcode);

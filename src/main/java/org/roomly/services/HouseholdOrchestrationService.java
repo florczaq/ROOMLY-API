@@ -35,8 +35,20 @@ public class HouseholdOrchestrationService {
     private final EntityManager entityManager;
     
     /**
-     * Creates a new household with owner profile and all necessary resources.
-     * This is an atomic operation - all steps succeed or all fail together.
+     * Creates a new household with an owner profile and all associated shared/personal resources.
+     * <p>
+     * Steps performed atomically: create owner profile → create household → link profile to
+     * household → create shared shopping list and inventory → create owner's personal shopping
+     * list and inventory. Returns a DTO of the fully populated household.
+     * </p>
+     *
+     * @param name            display name for the household
+     * @param membersLimit    maximum number of members allowed
+     * @param nickname        owner's in-household nickname
+     * @param avatarName      owner's avatar name
+     * @param avatarColorName owner's avatar color name
+     * @return DTO of the created household
+     * @throws IllegalStateException if the user is not authenticated
      */
     @Transactional
     public HouseholdDTO createHouseholdWithResources (
@@ -66,7 +78,7 @@ public class HouseholdOrchestrationService {
         
         // Create household (without saving yet)
         Household household = new Household()
-          .setId(householdService.generateNewHouseholdId())
+      .setId(householdService.generateNewHouseholdId())
           .setName(name)
           .setMembersLimit(membersLimit)
           .setJoinCode(householdService.generateNewJoinCode())
@@ -99,8 +111,17 @@ public class HouseholdOrchestrationService {
     }
     
     /**
-     * Adds a new member to an existing household with validation and resource creation.
-     * This is an atomic operation.
+     * Joins an existing household using a join code, creating a profile and personal resources
+     * for the authenticated user. Validates household capacity and nickname/avatar uniqueness
+     * before persisting. Sends a push notification to the household owner on success.
+     *
+     * @param nickname        the new member's in-household nickname
+     * @param avatarName      the new member's avatar name
+     * @param avatarColorName the new member's avatar color name
+     * @param joinCode        the household join code
+     * @return the newly created {@link Profile}
+     * @throws IllegalArgumentException if validation fails (already a member, nickname taken, etc.)
+     * @throws IllegalStateException    if the household is at capacity
      */
     @Notifiable(
       title = "New Household Member",
@@ -141,8 +162,11 @@ public class HouseholdOrchestrationService {
     }
     
     /**
-     * Creates and assigns personal resources (inventory and shopping list) to a profile.
-     * This is a helper method to avoid code duplication.
+     * Creates a personal shopping list and inventory for the given profile and persists
+     * the updated profile. Used for both household creation and member join flows.
+     *
+     * @param profile   the profile to assign resources to
+     * @param household the household the profile belongs to
      */
     @Transactional
     protected void createAndAssignPersonalResources (Profile profile, Household household) {
@@ -154,6 +178,17 @@ public class HouseholdOrchestrationService {
         profileRepository.save(profile);
     }
     
+    /**
+     * Removes the profile with the given ID from its household.
+     * <p>
+     * The authenticated user must own the profile being removed. Sends a push notification
+     * to the household owner on success.
+     * </p>
+     *
+     * @param profileId ID of the profile to remove
+     * @return DTO of the removed profile (used by {@code @Notifiable} for notification data)
+     * @throws IllegalArgumentException if the profile does not belong to the authenticated user
+     */
     @Transactional
     @Notifiable(
       title = "Household Member Left",

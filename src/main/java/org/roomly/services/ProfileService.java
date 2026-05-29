@@ -12,6 +12,14 @@ import org.roomly.utils.ColorsUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service for profile lifecycle management within a household.
+ * <p>
+ * Profiles are per-household identities for an {@link Account}. This service handles
+ * creation, retrieval, update, and validation of profile attributes (nickname, avatar name,
+ * avatar color) to maintain uniqueness constraints within a household.
+ * </p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -138,8 +146,16 @@ public class ProfileService {
     }
     
     /**
-     * Updates the profile with the given parameters.
-     * Validates the new parameters and saves the updated profile.
+     * Partially updates a profile's nickname, avatar name, and/or avatar color.
+     * Only non-null fields that differ from current values are applied and re-validated
+     * for uniqueness within the household.
+     *
+     * @param profileId       ID of the profile to update
+     * @param nickname        new nickname, or {@code null} to keep current
+     * @param avatarName      new avatar name, or {@code null} to keep current
+     * @param avatarColorName new avatar color name, or {@code null} to keep current
+     * @return the updated and persisted {@link Profile}
+     * @throws IllegalArgumentException if the profile is not found or a uniqueness constraint is violated
      */
     @Transactional
     public Profile updateProfile (String profileId, String nickname, String avatarName, String avatarColorName) {
