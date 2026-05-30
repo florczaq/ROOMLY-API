@@ -1,5 +1,11 @@
 [
   {
     "name": "Dog"
+  },
+  {
+    "name": "Cat"
+  },
+  {
+    "name": "Rabbit"
   }
 ]
