@@ -42,7 +42,7 @@ The project has a comprehensive implementation with:
 - **Transaction tracking** for household financial management (add/delete)
 - **Complete database schema** with 11 interconnected entities
 - **JWT-based authentication** with refresh token support
-- **Comprehensive GraphQL API** with 13 queries and 13 mutations
+- **Comprehensive GraphQL API** with 14 queries and 13 mutations
 
 ### Core Architecture
 
@@ -251,7 +251,12 @@ PostgreSQL driver is included and can be configured in `application.properties` 
 
 ### GraphQL API
 
-The application exposes a comprehensive GraphQL API with 13 queries and 13 mutations covering all major household management operations including households, profiles, shopping lists, inventory, events, and transactions.
+The application exposes a comprehensive GraphQL API with 14 queries and 13 mutations covering all major household management operations including households, profiles, shopping lists, inventory, events, and transactions.
+
+For detailed per-operation documentation see:
+- [docs/queries.md](docs/queries.md) — all queries with arguments, auth requirements, and examples
+- [docs/mutations.md](docs/mutations.md) — all mutations with arguments, auth requirements, and examples
+- [docs/dto.md](docs/dto.md) — all Data Transfer Objects and their fields
 
 #### Available Queries
 
@@ -260,6 +265,7 @@ type Query {
     # Household queries
     household(householdId: String!): Household!
     households: [Household]!
+    householdByJoinCode(joinCode: String!): Household!
     
     # Profile queries
     profile(profileId: String!): Profile!
@@ -323,9 +329,21 @@ type Mutation {
         count: Int!
         notes: String
     ): ShoppingListItem!
+    removeProductFromShoppingList(
+        productId: Int!
+        shoppingListId: Int!
+        count: Int!
+        notes: String
+    ): ShoppingListItem!
     
     # Inventory mutations
     addProductToInventory(
+        productId: Int!
+        inventoryId: Int!
+        count: Int!
+        notes: String
+    ): InventoryItem!
+    removeProductFromInventory(
         productId: Int!
         inventoryId: Int!
         count: Int!
@@ -533,6 +551,19 @@ query {
 ```graphql
 query {
     households {
+        id
+        name
+        membersCount
+        membersLimit
+    }
+}
+```
+
+**Look Up Household by Join Code**
+
+```graphql
+query {
+    householdByJoinCode(joinCode: "ABC123") {
         id
         name
         membersCount
@@ -1215,6 +1246,10 @@ ROOMLY/
 │               ├── AvatarsIntegrationTest.java
 │               ├── CacheEvictionTest.java
 │               └── HouseholdIntegrationTest.java
+├── docs/
+│   ├── queries.md                   # All GraphQL queries documented
+│   ├── mutations.md                 # All GraphQL mutations documented
+│   └── dto.md                       # All DTOs and their fields
 ├── build.gradle                      # Gradle build configuration
 ├── settings.gradle
 ├── gradlew                          # Gradle wrapper (Unix)
@@ -1271,7 +1306,7 @@ For questions and support, please contact the project maintainer or open an issu
 
 **Current Version**: 1.0.0  
 **Status**: 🚧 In Active Development  
-**Last Updated**: May 3, 2026
+**Last Updated**: May 30, 2026
 
 ### Implementation Status
 
@@ -1293,7 +1328,7 @@ For questions and support, please contact the project maintainer or open an issu
 - **Framework**: Spring Boot 4.0.5
 - **Language**: Java 21
 - **Database**: H2 (development), PostgreSQL (production-ready)
-- **API**: GraphQL with 13 queries and 13 mutations
+- **API**: GraphQL with 14 queries and 13 mutations
 - **Security**: JWT with refresh token rotation
 - **Build Tool**: Gradle 8.x
 - **Caching**: Custom LFU cache implementation with Caffeine
