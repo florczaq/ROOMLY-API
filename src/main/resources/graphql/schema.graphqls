@@ -4,7 +4,7 @@ type Query{
     #=== HOUSEHOLD ===
     household(householdId: String!): Household!
     households: [Household]!
-
+    householdByJoinCode(joinCode: String!): Household!
     #=== PROFILE ===
     profile(profileId: String!): Profile!
 

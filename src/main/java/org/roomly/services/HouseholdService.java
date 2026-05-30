@@ -44,7 +44,7 @@ public class HouseholdService {
           .orElseThrow(
             () -> new IllegalArgumentException("Household with id %s not found".formatted(householdId)));
     }
-    
+
     /**
      * Returns the household associated with the given join code.
      *
@@ -54,11 +54,11 @@ public class HouseholdService {
      */
     public Household getHouseHoldByJoinCode (String joinCode) {
         return householdRepository
-          .findByJoinCode((joinCode))
+          .findByJoinCode((joinCode.toUpperCase()))
           .orElseThrow(() -> new IllegalArgumentException(
             "Household with join code %s not found".formatted(joinCode)));
     }
-    
+
     /**
      * Generates a unique 6-character join code (lowercase letters and digits).
      * Retries until a code not already in use is found.
@@ -67,11 +67,11 @@ public class HouseholdService {
      */
     public String generateNewJoinCode () {
         String code;
-        do code = GeneratedCodeFactory.generate(6, CodeCharacters.LOWERCASE_LETTERS_AND_DIGITS);
+        do code = GeneratedCodeFactory.generate(6, CodeCharacters.UPPERCASE_LETTERS_AND_DIGITS);
         while (householdRepository.existsByJoinCode((code)));
         return code;
     }
-    
+
     /**
      * Generates a unique 7-character household ID (lowercase letters and digits).
      * Retries until an ID not already in use is found.
@@ -82,10 +82,10 @@ public class HouseholdService {
         String id;
         do id = GeneratedCodeFactory.generate(7, CodeCharacters.LOWERCASE_LETTERS_AND_DIGITS);
         while (householdRepository.existsById(id));
-        
+
         return id;
     }
-    
+
     /**
      * Returns all households the currently authenticated account belongs to.
      *
@@ -99,7 +99,7 @@ public class HouseholdService {
         }
         return householdRepository.findAllByAccount(authentication.getName());
     }
-    
+
     /**
      * Removes a profile from its household and deletes the profile entity.
      *
@@ -110,7 +110,7 @@ public class HouseholdService {
         Household household = profile.getHousehold();
         household.getMembers().remove(profile);
         householdRepository.save(household);
-        
+
         profileRepository.delete(profile);
     }
 }

@@ -19,42 +19,47 @@ import java.util.List;
 public class HouseholdResolver {
     private final HouseholdService householdService;
     private final HouseholdOrchestrationService householdOrchestrationService;
-    
+
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    public HouseholdDTO household (@Argument(name = "householdId") String id) {
+    public HouseholdDTO household(@Argument(name = "householdId") String id) {
         return householdService.getHousehold(id).toDTO();
     }
-    
+
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    public List<HouseholdDTO> households () {
+    public List<HouseholdDTO> households() {
         return householdService
-          .getAllHouseholds()
-          .stream()
-          .map(Household::toDTO)
-          .toList();
+            .getAllHouseholds()
+            .stream()
+            .map(Household::toDTO)
+            .toList();
     }
-    
+
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public HouseholdDTO createHousehold (@Argument String name,
-      @Argument int membersLimit,
-      @Argument String nickname,
-      @Argument String avatarName,
-      @Argument String avatarColorName
+    public HouseholdDTO createHousehold(@Argument String name,
+                                        @Argument int membersLimit,
+                                        @Argument String nickname,
+                                        @Argument String avatarName,
+                                        @Argument String avatarColorName
     ) {
         return householdOrchestrationService.createHouseholdWithResources(
-          name, membersLimit, nickname, avatarName, avatarColorName
+            name, membersLimit, nickname, avatarName, avatarColorName
         );
     }
-    
-    public String updateHousehold () {
+
+    @QueryMapping
+    public HouseholdDTO householdByJoinCode(@Argument String joinCode) {
+        return householdService.getHouseHoldByJoinCode(joinCode).toDTO();
+    }
+
+    public String updateHousehold() {
         return "HouseholdResolver";
     }
-    
-    public String deleteHousehold () {
+
+    public String deleteHousehold() {
         return "HouseholdResolver";
     }
-    
+
 }
