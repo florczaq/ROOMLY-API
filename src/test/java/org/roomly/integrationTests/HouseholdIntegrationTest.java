@@ -199,7 +199,7 @@ class HouseholdIntegrationTest {
         MemberResources member1Resources = joinHouseholdAsDevice(device1Tokens, "DeviceUser1", "Dog", "white", joinCode);
         assertResourceCounts(household, 3, 3, "after member 1 joins");
 
-        joinHouseholdAsDevice(device2Tokens, "DeviceUser2", "Fox", "green", joinCode);
+        joinHouseholdAsDevice(device2Tokens, "DeviceUser2", "Rabbit", "red", joinCode);
         assertResourceCounts(household, 4, 4, "after member 2 joins");
 
         return new DeviceSetup(
