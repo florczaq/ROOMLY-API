@@ -70,8 +70,10 @@ public class HouseholdResolver {
         return "HouseholdResolver";
     }
 
-    public String deleteHousehold() {
-        return "HouseholdResolver";
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public Boolean deleteHousehold(@Argument String householdId, Authentication authentication) {
+        return householdOrchestrationService.deleteHousehold(householdId, authentication.getName());
     }
 
 }

@@ -4,12 +4,15 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.roomly.annotations.Notifiable;
 import org.roomly.entities.Event;
+import org.roomly.entities.Household;
 import org.roomly.entities.Profile;
 import org.roomly.repositories.EventsRepository;
 import org.roomly.repositories.HouseholdRepository;
+import org.roomly.repositories.ProfileRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,6 +28,7 @@ import java.util.List;
 public class EventsService {
     private final EventsRepository eventsRepository;
     private final HouseholdRepository householdRepository;
+    private final ProfileRepository profileRepository;
 
     /**
      * Returns all events for a household whose start time falls within the given range.
@@ -75,12 +79,27 @@ public class EventsService {
      * @param endTime     when the event ends
      * @return the persisted {@link Event}
      */
-    public Event addEvent (String name, String description, LocalDateTime startTime, LocalDateTime endTime) {
+    public Event addEvent (String householdId, String name, String description,
+                           LocalDateTime startTime, LocalDateTime endTime,
+                           List<String> attendeeIds, String accountId) {
+        Household household = householdRepository.findById(householdId)
+          .orElseThrow(() -> new EntityNotFoundException("Household with id " + householdId + " not found"));
+
+        Profile creator = profileRepository.findByHouseholdIdAndAccountId(householdId, accountId)
+          .orElseThrow(() -> new EntityNotFoundException("Profile not found for account in household " + householdId));
+
+        List<Profile> attendees = attendeeIds != null && !attendeeIds.isEmpty()
+          ? profileRepository.findAllById(attendeeIds)
+          : new ArrayList<>();
+
         Event event = new Event()
           .setName(name)
           .setDescription(description)
           .setStartTime(startTime)
-          .setEndTime(endTime);
+          .setEndTime(endTime)
+          .setHousehold(household)
+          .setCreator(creator)
+          .setAttendees(attendees);
         return eventsRepository.save(event);
     }
     
@@ -101,27 +120,17 @@ public class EventsService {
       String name,
       String description,
       LocalDateTime startTime,
-      LocalDateTime endTime
+      LocalDateTime endTime,
+      List<String> attendeeIds
     ) {
         Event event = this.getEventById(eventId);
-        
-        boolean nameChanged = name != null && !name.equals(event.getName());
-        boolean descriptionChanged = description != null && !description.equals(event.getDescription());
-        boolean startTimeChanged = startTime != null && !startTime.equals(event.getStartTime());
-        boolean endTimeChanged = endTime != null && !endTime.equals(event.getEndTime());
-        
-        if (nameChanged) {
-            event.setName(name);
-        }
-        if (descriptionChanged) {
-            event.setDescription(description);
-        }
-        if (startTimeChanged) {
-            event.setStartTime(startTime);
-        }
-        if (endTimeChanged) {
-            event.setEndTime(endTime);
-        }
+
+        if (name != null && !name.equals(event.getName())) event.setName(name);
+        if (description != null && !description.equals(event.getDescription())) event.setDescription(description);
+        if (startTime != null && !startTime.equals(event.getStartTime())) event.setStartTime(startTime);
+        if (endTime != null && !endTime.equals(event.getEndTime())) event.setEndTime(endTime);
+        if (attendeeIds != null) event.setAttendees(profileRepository.findAllById(attendeeIds));
+
         return eventsRepository.save(event);
     }
     

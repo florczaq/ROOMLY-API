@@ -49,23 +49,33 @@ public class EventsResolver {
     
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public EventDTO addEvent (@Argument String name,
+    public EventDTO addEvent (@Argument String householdId,
+      @Argument String name,
       @Argument String description,
       @Argument LocalDateTime startTime,
-      @Argument LocalDateTime endTime
+      @Argument LocalDateTime endTime,
+      @Argument List<String> attendeeIds,
+      Authentication authentication
     ) {
-        return eventsService.addEvent(name, description, startTime, endTime).toDTO();
+        return eventsService.addEvent(
+          householdId, name, description, startTime, endTime,
+          attendeeIds, authentication.getName()
+        ).toDTO();
     }
-    
+
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
     public EventDTO updateEvent (@Argument int eventId,
       @Argument String name,
       @Argument String description,
       @Argument LocalDateTime startTime,
-      @Argument LocalDateTime endTime
+      @Argument LocalDateTime endTime,
+      @Argument List<String> attendeeIds
     ) {
-        return eventsService.updateEvent(eventId, name, description, startTime, endTime).toDTO();
+        return eventsService.updateEvent(
+          eventId, name, description, startTime, endTime,
+          attendeeIds
+        ).toDTO();
     }
     
     @MutationMapping

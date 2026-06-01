@@ -15,7 +15,9 @@ public interface EventsRepository extends JpaRepository<Event, Integer> {
       LocalDateTime startTimeAfter,
       LocalDateTime startTimeBefore
     );
-    
+
+    void deleteAllByHouseholdId (String householdId);
+
     @Query("SELECT e FROM Event e JOIN e.attendees a WHERE a.id = :attendeeId AND e.startTime BETWEEN :startTimeAfter AND :startTimeBefore")
     List<Event> findAllByAttendees_IdAndStartTimeBetween(
       @Param("attendeeId") String attendeeId,

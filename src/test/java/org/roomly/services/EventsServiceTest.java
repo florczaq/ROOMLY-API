@@ -8,9 +8,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.roomly.entities.Event;
+import org.roomly.entities.Household;
 import org.roomly.entities.Profile;
 import org.roomly.repositories.EventsRepository;
 import org.roomly.repositories.HouseholdRepository;
+import org.roomly.repositories.ProfileRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -35,6 +37,9 @@ class EventsServiceTest {
 
     @Mock
     private HouseholdRepository householdRepository;
+
+    @Mock
+    private ProfileRepository profileRepository;
 
     @InjectMocks
     private EventsService eventsService;
@@ -106,16 +111,22 @@ class EventsServiceTest {
     void addEventCreatesAndSavesEventWithProvidedValues() {
         LocalDateTime startTime = LocalDateTime.now().plusHours(2);
         LocalDateTime endTime = startTime.plusHours(1);
+        Household household = new Household().setId("household-1");
+        Profile creator = new Profile().setId("profile-1");
         Event persisted = new Event()
           .setId(5)
           .setName("Clean up")
           .setDescription("Kitchen and bathroom")
           .setStartTime(startTime)
-          .setEndTime(endTime);
+          .setEndTime(endTime)
+          .setHousehold(household)
+          .setCreator(creator);
 
+        when(householdRepository.findById("household-1")).thenReturn(Optional.of(household));
+        when(profileRepository.findByHouseholdIdAndAccountId("household-1", "account-1")).thenReturn(Optional.of(creator));
         when(eventsRepository.save(any(Event.class))).thenReturn(persisted);
 
-        Event result = eventsService.addEvent("Clean up", "Kitchen and bathroom", startTime, endTime);
+        Event result = eventsService.addEvent("household-1", "Clean up", "Kitchen and bathroom", startTime, endTime, null, "account-1");
 
         assertSame(persisted, result);
     }
@@ -141,7 +152,8 @@ class EventsServiceTest {
           "New name",
           null,
           updatedStart,
-          originalEnd
+          originalEnd,
+          null
         );
 
         assertEquals("New name", result.getName());
@@ -170,6 +182,7 @@ class EventsServiceTest {
           "Board games",
           null,
           start,
+          null,
           null
         );
 
@@ -185,7 +198,7 @@ class EventsServiceTest {
 
         assertThrows(
           EntityNotFoundException.class,
-          () -> eventsService.updateEvent(404, "Name", "Desc", LocalDateTime.now(), LocalDateTime.now().plusHours(1))
+          () -> eventsService.updateEvent(404, "Name", "Desc", LocalDateTime.now(), LocalDateTime.now().plusHours(1), null)
         );
     }
 

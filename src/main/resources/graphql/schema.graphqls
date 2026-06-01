@@ -49,9 +49,11 @@ type Mutation {
     removeProductFromInventory(productId: Int!, inventoryId: Int!,  count: Int!, notes: String): InventoryItem!
     #=== AVATARS AND COLORS ===
 
+    deleteHousehold(householdId: String!): Boolean!
+
     #=== EVENTS ===
-    addEvent(name: String!, description: String, startTime: DateTime!, endTime: DateTime!): Event!
-    updateEvent(eventId: Int!, name: String, description: String, startTime: DateTime, endTime: DateTime): Event!
+    addEvent(householdId: String!, name: String!, description: String, startTime: DateTime!, endTime: DateTime!, attendeeIds: [String]): Event!
+    updateEvent(eventId: Int!, name: String, description: String, startTime: DateTime, endTime: DateTime, attendeeIds: [String]): Event!
     deleteEvent(eventId: Int!): Boolean!
 
     #=== TRANSACTIONS ===

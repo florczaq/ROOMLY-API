@@ -8,18 +8,29 @@ import org.roomly.annotations.Notifiable;
 import org.roomly.dto.HouseholdDTO;
 import org.roomly.dto.ProfileDTO;
 import org.roomly.entities.Household;
+import org.roomly.entities.Inventory;
 import org.roomly.entities.Profile;
+import org.roomly.entities.ShoppingList;
+import org.roomly.exception.ConflictException;
+import org.roomly.notifications.repositories.NotificationRepository;
+import org.roomly.repositories.EventsRepository;
 import org.roomly.repositories.HouseholdRepository;
+import org.roomly.repositories.InventoryRepository;
 import org.roomly.repositories.ProfileRepository;
+import org.roomly.repositories.ShoppingListRepository;
+import org.roomly.repositories.TransactionsRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.services.AuthenticationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 /**
- * Orchestrates complex multiservice workflows that span multiple domains.
- * Keeps individual services focused on single responsibilities while
- * managing coordination and transactional boundaries.
+ * Orchestrates complex multi-service workflows that span multiple domains.
+ * <p>
+ * Handles household creation, member join/leave, and household deletion — operations
+ * that require coordinating profiles, inventories, shopping lists, events, transactions,
+ * and notifications within a single transaction boundary.
+ * </p>
  */
 @Slf4j
 @Service
@@ -32,6 +43,11 @@ public class HouseholdOrchestrationService {
     private final AuthenticationService authenticationService;
     private final HouseholdRepository householdRepository;
     private final ProfileRepository profileRepository;
+    private final EventsRepository eventsRepository;
+    private final TransactionsRepository transactionsRepository;
+    private final NotificationRepository notificationRepository;
+    private final InventoryRepository inventoryRepository;
+    private final ShoppingListRepository shoppingListRepository;
     private final EntityManager entityManager;
     
     /**
@@ -47,8 +63,8 @@ public class HouseholdOrchestrationService {
      * @param nickname        owner's in-household nickname
      * @param avatarName      owner's avatar name
      * @param avatarColorName owner's avatar color name
+     * @param authentication  the authenticated user creating the household
      * @return DTO of the created household
-     * @throws IllegalStateException if the user is not authenticated
      */
     @Transactional
     public HouseholdDTO createHouseholdWithResources (
@@ -60,45 +76,37 @@ public class HouseholdOrchestrationService {
       Authentication authentication
     ) {
         var account = authenticationService.loadAccountById(authentication.getName());
-        
-        // Create owner profile (without saving yet)
+
         Profile ownerProfile = new Profile()
           .setAccount(account)
           .setNickname(nickname)
           .setAvatarName(avatarName)
           .setAvatarColorName(avatarColorName);
-        
-        // Save profile first to get an ID
+
+        // Profile must be saved first so it has an ID before being set as household owner
         ownerProfile = profileRepository.save(ownerProfile);
-        
-        // Create household (without saving yet)
+
         Household household = new Household()
-      .setId(householdService.generateNewHouseholdId())
+          .setId(householdService.generateNewHouseholdId())
           .setName(name)
           .setMembersLimit(membersLimit)
           .setJoinCode(householdService.generateNewJoinCode())
           .setOwner(ownerProfile);
-        
-        // Save household to get it persisted (needed before creating resources)
+
         household = householdRepository.save(household);
-        
-        // Update owner profile with household reference and save to persist the relationship
+
         ownerProfile.setHousehold(household);
         ownerProfile = profileRepository.save(ownerProfile);
-        
-        // Create shared resources
+
         var sharedShoppingList = shoppingListService.createShoppingList(null, household);
         var sharedInventory = inventoryService.createInventory(null);
-        
-        // Assign shared resources to household and save once with all updates
+
         household.setSharedShoppingList(sharedShoppingList);
         household.setSharedInventory(sharedInventory);
         household = householdRepository.save(household);
-        
-        // Create owner's personal resources and assign to profile (saves profile with all updates)
+
         createAndAssignPersonalResources(ownerProfile, household);
-        
-        // Flush to ensure all changes are persisted before returning DTO
+
         entityManager.flush();
         
         log.info("Created household {} with owner {}", household.getId(), ownerProfile.getId());
@@ -114,9 +122,10 @@ public class HouseholdOrchestrationService {
      * @param avatarName      the new member's avatar name
      * @param avatarColorName the new member's avatar color name
      * @param joinCode        the household join code
+     * @param authentication  the authenticated user joining the household
      * @return the newly created {@link Profile}
-     * @throws IllegalArgumentException if validation fails (already a member, nickname taken, etc.)
-     * @throws IllegalStateException    if the household is at capacity
+     * @throws ConflictException if the user is already a member, the nickname is taken,
+     *                           the avatar combination is unavailable, or the household is at capacity
      */
     @Notifiable(
       title = "New Household Member",
@@ -140,23 +149,58 @@ public class HouseholdOrchestrationService {
           account.getId(), household.getId(), nickname, avatarName, avatarColorName
         );
         
-        // Validate
         profileService.validateJoinHousehold(account, household, nickname, avatarName, avatarColorName);
-        
-        // Create profile
+
         Profile savedProfile = profileService.createProfile(
           nickname, avatarName, avatarColorName, account, household);
-        
-        // Create resources for new member and assign them
+
         createAndAssignPersonalResources(savedProfile, household);
-        
-        // Flush to ensure all changes are persisted before returning DTO
+
         entityManager.flush();
         
         log.info("Added member {} to household {}", savedProfile.getId(), household.getId());
         return savedProfile;
     }
     
+    /**
+     * Deletes a household and all associated resources. Only the household owner may perform this.
+     * Deletion order respects FK constraints: notifications → transactions → events →
+     * household (cascades to all member profiles and their personal resources) → shared resources.
+     *
+     * @param householdId ID of the household to delete
+     * @param accountId   ID of the authenticated account
+     * @return {@code true} on success
+     * @throws SecurityException if the authenticated user is not the household owner
+     */
+    @Transactional
+    public boolean deleteHousehold (String householdId, String accountId) {
+        Household household = householdService.getHousehold(householdId);
+
+        if (!household.getOwner().getAccount().getId().equals(accountId)) {
+            throw new SecurityException("Only the household owner can delete the household");
+        }
+
+        Inventory sharedInventory = household.getSharedInventory();
+        ShoppingList sharedShoppingList = household.getSharedShoppingList();
+
+        notificationRepository.deleteAllByHouseholdId(householdId);
+        transactionsRepository.deleteAllByHouseholdId(householdId);
+        eventsRepository.deleteAllByHouseholdId(householdId);
+
+        household.setOwner(null);
+        household.setSharedInventory(null);
+        household.setSharedShoppingList(null);
+        householdRepository.save(household);
+
+        householdRepository.delete(household);
+
+        if (sharedInventory != null) inventoryRepository.deleteById(sharedInventory.getId());
+        if (sharedShoppingList != null) shoppingListRepository.deleteById(sharedShoppingList.getId());
+
+        log.info("Deleted household {}", householdId);
+        return true;
+    }
+
     /**
      * Creates a personal shopping list and inventory for the given profile and persists
      * the updated profile. Used for both household creation and member join flows.
@@ -181,9 +225,10 @@ public class HouseholdOrchestrationService {
      * to the household owner on success.
      * </p>
      *
-     * @param profileId ID of the profile to remove
+     * @param profileId      ID of the profile to remove
+     * @param authentication the authenticated user performing the removal
      * @return DTO of the removed profile (used by {@code @Notifiable} for notification data)
-     * @throws IllegalArgumentException if the profile does not belong to the authenticated user
+     * @throws SecurityException if the profile does not belong to the authenticated user
      */
     @Transactional
     @Notifiable(
