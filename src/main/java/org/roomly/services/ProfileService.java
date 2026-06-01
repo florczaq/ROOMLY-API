@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.roomly.entities.Household;
 import org.roomly.entities.Profile;
+import org.roomly.exception.ConflictException;
+import org.roomly.exception.ResourceNotFoundException;
 import org.roomly.repositories.ProfileRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.utils.AvatarsUtil;
@@ -73,7 +75,7 @@ public class ProfileService {
      */
     public Profile getCurrentlyAuthenticatedUserProfile(Household household, Authentication authentication) {
         return profileRepository.findByHouseholdIdAndAccountId(household.getId(), authentication.getName())
-            .orElseThrow(() -> new RuntimeException("Profile not found for account: " + authentication.getName()));
+            .orElseThrow(() -> new ResourceNotFoundException("Profile not found for account: " + authentication.getName()));
     }
 
     /**
@@ -91,7 +93,7 @@ public class ProfileService {
      */
     private void validateNotAlreadyMember(Account account, Household household) {
         if (profileRepository.existsByAccountAndHousehold(account, household)) {
-            throw new IllegalArgumentException("User is already a member of this household");
+            throw new ConflictException("User is already a member of this household");
         }
     }
 
@@ -100,7 +102,7 @@ public class ProfileService {
      */
     private void validateNicknameAvailability(Household household, String nickname) {
         if (profileRepository.existsByHouseholdAndNickname(household, nickname)) {
-            throw new IllegalArgumentException("Nickname is already taken in this household");
+            throw new ConflictException("Nickname is already taken in this household");
         }
     }
 
@@ -109,7 +111,7 @@ public class ProfileService {
      */
     private void validateHouseholdCapacity(Household household) {
         if (profileRepository.countByHousehold(household) >= household.getMembersLimit()) {
-            throw new IllegalStateException("Household has reached its members limit");
+            throw new ConflictException("Household has reached its members limit");
         }
     }
 
@@ -123,7 +125,7 @@ public class ProfileService {
     ) {
         if (profileRepository.existsByHouseholdAndAvatarNameOrAvatarColorName(
             household, avatarName, avatarColorName)) {
-            throw new IllegalArgumentException("Avatar name or color is already taken in this household");
+            throw new ConflictException("Avatar name or color is already taken in this household");
         }
     }
 
@@ -155,7 +157,7 @@ public class ProfileService {
      */
     public Profile getProfileById(String profileId) {
         return profileRepository.findById(profileId)
-            .orElseThrow(() -> new IllegalArgumentException("Profile with id %s not found".formatted(profileId)));
+            .orElseThrow(() -> new ResourceNotFoundException("Profile with id %s not found".formatted(profileId)));
     }
 
     /**
