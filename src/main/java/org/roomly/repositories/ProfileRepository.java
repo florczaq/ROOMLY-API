@@ -25,15 +25,19 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     );
     
     List<Profile> findAllByHouseholdId (String householdId);
-    
-    Optional<Profile> findByHouseholdAndAccount (Household household, Account account);
-    
+
     @Query("SELECT p FROM Profile p WHERE p.household.id = :householdId AND p.account.id = :accountId")
     Optional<Profile> findByHouseholdIdAndAccountId (
       @Param("householdId") String householdId,
       @Param("accountId") String accountId
     );
     
+    @Query("SELECT p FROM Profile p WHERE p.household.id IN :householdIds AND p.account.id = :accountId")
+    List<Profile> findAllByHouseholdIdInAndAccountId(
+      @Param("householdIds") List<String> householdIds,
+      @Param("accountId") String accountId
+    );
+
     Optional<Profile> findProfileById (String id);
     
     @Query("SELECT COUNT(p) > 0 FROM Profile p WHERE p.id = :profileId AND p.account.id = :accountId")

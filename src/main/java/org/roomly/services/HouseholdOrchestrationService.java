@@ -13,7 +13,7 @@ import org.roomly.repositories.HouseholdRepository;
 import org.roomly.repositories.ProfileRepository;
 import org.roomly.security.authentication.entities.Account;
 import org.roomly.security.authentication.services.AuthenticationService;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 /**
@@ -56,14 +56,9 @@ public class HouseholdOrchestrationService {
       int membersLimit,
       String nickname,
       String avatarName,
-      String avatarColorName
+      String avatarColorName,
+      Authentication authentication
     ) {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("User must be authenticated to create a household");
-        }
-        
         var account = authenticationService.loadAccountById(authentication.getName());
         
         // Create owner profile (without saving yet)
@@ -107,7 +102,7 @@ public class HouseholdOrchestrationService {
         entityManager.flush();
         
         log.info("Created household {} with owner {}", household.getId(), ownerProfile.getId());
-        return household.toDTO();
+        return household.toDTO(ownerProfile);
     }
     
     /**
@@ -133,9 +128,10 @@ public class HouseholdOrchestrationService {
       String nickname,
       String avatarName,
       String avatarColorName,
-      String joinCode
+      String joinCode,
+      Authentication authentication
     ) {
-        Account account = authenticationService.getCurrentlyAuthenticatedAccount();
+        Account account = authenticationService.loadAccountById(authentication.getName());
         log.info("User {} is attempting to join household with join code {}", account.getId(), joinCode);
         
         Household household = householdService.getHouseHoldByJoinCode(joinCode);
@@ -196,8 +192,8 @@ public class HouseholdOrchestrationService {
       recipientProfileId = "#{#result.household.owner.id}"
     )
     @SuppressWarnings("UnusedReturnValue")
-    public ProfileDTO removeMemberFromHousehold (String profileId) {
-        Account account = authenticationService.getCurrentlyAuthenticatedAccount();
+    public ProfileDTO removeMemberFromHousehold (String profileId, Authentication authentication) {
+        Account account = authenticationService.loadAccountById(authentication.getName());
         log.info("User {} is attempting to leave household with profile ID {}", account.getId(), profileId);
         
         Profile profile = profileService.getProfileById(profileId);

@@ -11,8 +11,6 @@ import org.roomly.repositories.ProductsRepository;
 import org.roomly.repositories.ProfileRepository;
 import org.roomly.repositories.ShoppingListItemRepository;
 import org.roomly.repositories.ShoppingListRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,7 +91,8 @@ public class ShoppingListService {
     public ShoppingListItem addProductToShoppingList(int productId,
                                                      int shoppingListId,
                                                      int count,
-                                                     @Nullable String notes
+                                                     @Nullable String notes,
+                                                     String accountId
     ) {
         Product product = productsRepository
             .findById(productId)
@@ -102,8 +101,6 @@ public class ShoppingListService {
         ShoppingList shoppingList = shoppingListRepository
             .findById(shoppingListId)
             .orElseThrow(() -> new EntityNotFoundException("Shopping list not found"));
-
-        String accountId = getAuthenticatedUserId();
 
         Profile addedBy = profileRepository
             .findByHouseholdIdAndAccountId(shoppingList.getOwner().getHousehold().getId(), accountId)
@@ -187,16 +184,4 @@ public class ShoppingListService {
     }
 
 
-    /**
-     * Returns the account ID of the currently authenticated user.
-     *
-     * @throws SecurityException if there is no authenticated principal in the security context
-     */
-    private String getAuthenticatedUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new SecurityException("User is not authenticated");
-        }
-        return authentication.getName();
-    }
 }

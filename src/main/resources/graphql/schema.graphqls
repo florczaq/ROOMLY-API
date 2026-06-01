@@ -7,7 +7,6 @@ type Query{
     householdByJoinCode(joinCode: String!): Household!
     #=== PROFILE ===
     profile(profileId: String!): Profile!
-    currentUserProfile: Profile!
     #=== SHOPPING LIST ===
     shoppingList(id: Int!): ShoppingList!
     allShoppingLists(householdId: String!): [ShoppingList]!
@@ -72,6 +71,7 @@ type Household {
     sharedInventory: Inventory!
     sharedShoppingList: ShoppingList!
     membersCount: Int!
+    currentUserProfile: Profile
 }
 
 type Profile {

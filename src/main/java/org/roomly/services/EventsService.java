@@ -7,7 +7,6 @@ import org.roomly.entities.Event;
 import org.roomly.entities.Profile;
 import org.roomly.repositories.EventsRepository;
 import org.roomly.repositories.HouseholdRepository;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -134,10 +133,9 @@ public class EventsService {
      * @throws EntityNotFoundException if no event exists with the given ID
      * @throws SecurityException       if the authenticated user is not the event creator
      */
-    public Boolean deleteEvent (int eventId) {
+    public Boolean deleteEvent (int eventId, String accountId) {
         Event event = this.getEventById(eventId);
-        String accountId = this.getAuthenticatedUserId();
-        
+
         if (event.getCreator().getAccount().getId().equals(accountId)) {
             eventsRepository.deleteById(eventId);
         } else {
@@ -162,11 +160,9 @@ public class EventsService {
       description = "You have been added as an attendee to the event: #{#result.name}",
       recipientProfileId = "#{#profileId}"
     )
-    public Event addAttendee (int eventId, String profileId) {
+    public Event addAttendee (int eventId, String profileId, String accountId) {
         Event event = this.getEventById(eventId);
-        
-        String accountId = this.getAuthenticatedUserId();
-        
+
         if (event.getCreator().getAccount().getId().equals(accountId)) {
             if (event.getAttendees().stream().anyMatch(profile -> profile.getId().equals(profileId))) {
                 throw new IllegalArgumentException(
@@ -195,11 +191,9 @@ public class EventsService {
       description = "You have been removed as an attendee from the event: #{#result.name}",
       recipientProfileId = "#{#profileId}"
     )
-    public Event removeAttendee (int eventId, String profileId) {
+    public Event removeAttendee (int eventId, String profileId, String accountId) {
         Event event = this.getEventById(eventId);
-        String accountId = this.getAuthenticatedUserId();
-        
-        
+
         if (event.getCreator().getAccount().getId().equals(accountId)) {
             if (event.getAttendees().stream().noneMatch(profile -> profile.getId().equals(profileId))) {
                 throw new IllegalArgumentException(
@@ -212,17 +206,5 @@ public class EventsService {
         }
     }
     
-    /**
-     * Returns the account ID of the currently authenticated user.
-     *
-     * @throws SecurityException if there is no authenticated principal in the security context
-     */
-    private String getAuthenticatedUserId () {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new SecurityException("User is not authenticated");
-        }
-        return authentication.getName();
-    }
 }
 

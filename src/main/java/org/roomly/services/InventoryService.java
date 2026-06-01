@@ -9,8 +9,6 @@ import org.roomly.repositories.InventoryItemRepository;
 import org.roomly.repositories.InventoryRepository;
 import org.roomly.repositories.ProductsRepository;
 import org.roomly.repositories.ProfileRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,14 +86,14 @@ public class InventoryService {
     public InventoryItem addProductToInventory(int productId,
                                                int inventoryId,
                                                int count,
-                                               @Nullable String notes
+                                               @Nullable String notes,
+                                               String accountId
     ) {
         Product product = productsRepository
             .findById(productId)
             .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
         Inventory inventory = this.getInventory(inventoryId);
-        String accountId = getAuthenticatedUserId();
 
         Profile addedBy = profileRepository
             .findByHouseholdIdAndAccountId(inventory.getOwner().getHousehold().getId(), accountId)
@@ -180,17 +178,5 @@ public class InventoryService {
         return inventoryItem;
     }
 
-    /**
-     * Returns the account ID of the currently authenticated user.
-     *
-     * @throws SecurityException if there is no authenticated principal in the security context
-     */
-    private String getAuthenticatedUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new SecurityException("User is not authenticated");
-        }
-        return authentication.getName();
-    }
 }
 

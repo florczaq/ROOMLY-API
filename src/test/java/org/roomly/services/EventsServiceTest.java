@@ -12,7 +12,6 @@ import org.roomly.entities.Profile;
 import org.roomly.repositories.EventsRepository;
 import org.roomly.repositories.HouseholdRepository;
 import org.roomly.security.authentication.entities.Account;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
@@ -192,12 +191,11 @@ class EventsServiceTest {
 
     @Test
     void deleteEventDeletesEventWhenAuthenticatedUserIsCreator() {
-        setAuthenticatedUser("account-1");
         Event event = eventWithCreator("account-1");
 
         when(eventsRepository.findById(12)).thenReturn(Optional.of(event));
 
-        Boolean deleted = eventsService.deleteEvent(12);
+        Boolean deleted = eventsService.deleteEvent(12, "account-1");
 
         assertEquals(true, deleted);
         verify(eventsRepository).deleteById(12);
@@ -205,12 +203,11 @@ class EventsServiceTest {
 
     @Test
     void deleteEventThrowsWhenAuthenticatedUserIsNotCreator() {
-        setAuthenticatedUser("account-2");
         Event event = eventWithCreator("account-1");
 
         when(eventsRepository.findById(12)).thenReturn(Optional.of(event));
 
-        assertThrows(SecurityException.class, () -> eventsService.deleteEvent(12));
+        assertThrows(SecurityException.class, () -> eventsService.deleteEvent(12, "account-2"));
     }
 
     @Test
@@ -218,19 +215,18 @@ class EventsServiceTest {
         Event event = eventWithCreator("account-1");
         when(eventsRepository.findById(12)).thenReturn(Optional.of(event));
 
-        assertThrows(SecurityException.class, () -> eventsService.deleteEvent(12));
+        assertThrows(SecurityException.class, () -> eventsService.deleteEvent(12, null));
     }
 
     @Test
     void addAttendeeAddsProfileWhenAuthenticatedUserIsCreatorAndProfileIsNotPresent() {
-        setAuthenticatedUser("account-1");
         Event event = eventWithCreator("account-1");
         event.setAttendees(new ArrayList<>(List.of(new Profile().setId("profile-1"))));
 
         when(eventsRepository.findById(21)).thenReturn(Optional.of(event));
         when(eventsRepository.save(event)).thenReturn(event);
 
-        Event result = eventsService.addAttendee(21, "profile-2");
+        Event result = eventsService.addAttendee(21, "profile-2", "account-1");
 
         assertEquals(2, result.getAttendees().size());
         assertEquals("profile-2", result.getAttendees().get(1).getId());
@@ -238,29 +234,26 @@ class EventsServiceTest {
 
     @Test
     void addAttendeeThrowsWhenProfileIsAlreadyAttendee() {
-        setAuthenticatedUser("account-1");
         Event event = eventWithCreator("account-1");
         event.setAttendees(new ArrayList<>(List.of(new Profile().setId("profile-1"))));
 
         when(eventsRepository.findById(21)).thenReturn(Optional.of(event));
 
-        assertThrows(IllegalArgumentException.class, () -> eventsService.addAttendee(21, "profile-1"));
+        assertThrows(IllegalArgumentException.class, () -> eventsService.addAttendee(21, "profile-1", "account-1"));
     }
 
     @Test
     void addAttendeeThrowsWhenAuthenticatedUserIsNotCreator() {
-        setAuthenticatedUser("account-2");
         Event event = eventWithCreator("account-1");
         event.setAttendees(new ArrayList<>(emptyList()));
 
         when(eventsRepository.findById(21)).thenReturn(Optional.of(event));
 
-        assertThrows(SecurityException.class, () -> eventsService.addAttendee(21, "profile-1"));
+        assertThrows(SecurityException.class, () -> eventsService.addAttendee(21, "profile-1", "account-2"));
     }
 
     @Test
     void removeAttendeeRemovesProfileWhenAuthenticatedUserIsCreator() {
-        setAuthenticatedUser("account-1");
         Event event = eventWithCreator("account-1");
         event.setAttendees(new ArrayList<>(List.of(
           new Profile().setId("profile-1"),
@@ -270,32 +263,30 @@ class EventsServiceTest {
         when(eventsRepository.findById(31)).thenReturn(Optional.of(event));
         when(eventsRepository.save(event)).thenReturn(event);
 
-        Event result = eventsService.removeAttendee(31, "profile-1");
+        Event result = eventsService.removeAttendee(31, "profile-1", "account-1");
 
         assertEquals(1, result.getAttendees().size());
-        assertEquals("profile-2", result.getAttendees().get(0).getId());
+        assertEquals("profile-2", result.getAttendees().getFirst().getId());
     }
 
     @Test
     void removeAttendeeThrowsWhenProfileIsNotAttendee() {
-        setAuthenticatedUser("account-1");
         Event event = eventWithCreator("account-1");
         event.setAttendees(new ArrayList<>(List.of(new Profile().setId("profile-1"))));
 
         when(eventsRepository.findById(31)).thenReturn(Optional.of(event));
 
-        assertThrows(IllegalArgumentException.class, () -> eventsService.removeAttendee(31, "profile-9"));
+        assertThrows(IllegalArgumentException.class, () -> eventsService.removeAttendee(31, "profile-9", "account-1"));
     }
 
     @Test
     void removeAttendeeThrowsWhenAuthenticatedUserIsNotCreator() {
-        setAuthenticatedUser("account-2");
         Event event = eventWithCreator("account-1");
         event.setAttendees(new ArrayList<>(List.of(new Profile().setId("profile-1"))));
 
         when(eventsRepository.findById(31)).thenReturn(Optional.of(event));
 
-        assertThrows(SecurityException.class, () -> eventsService.removeAttendee(31, "profile-1"));
+        assertThrows(SecurityException.class, () -> eventsService.removeAttendee(31, "profile-1", "account-2"));
     }
 
     @Test
@@ -305,7 +296,7 @@ class EventsServiceTest {
 
         when(eventsRepository.findById(21)).thenReturn(Optional.of(event));
 
-        assertThrows(SecurityException.class, () -> eventsService.addAttendee(21, "profile-1"));
+        assertThrows(SecurityException.class, () -> eventsService.addAttendee(21, "profile-1", null));
     }
 
     @Test
@@ -315,7 +306,7 @@ class EventsServiceTest {
 
         when(eventsRepository.findById(31)).thenReturn(Optional.of(event));
 
-        assertThrows(SecurityException.class, () -> eventsService.removeAttendee(31, "profile-1"));
+        assertThrows(SecurityException.class, () -> eventsService.removeAttendee(31, "profile-1", null));
     }
 
     private static Event eventWithCreator(String accountId) {
@@ -324,12 +315,5 @@ class EventsServiceTest {
         return new Event().setId(1).setCreator(creator);
     }
 
-    private static void setAuthenticatedUser(String accountId) {
-        UsernamePasswordAuthenticationToken authentication =
-          new UsernamePasswordAuthenticationToken(accountId, null, emptyList());
-        var context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
-    }
 }
 

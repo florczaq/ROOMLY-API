@@ -13,14 +13,18 @@ import org.roomly.enums.TransactionType;
 import org.roomly.repositories.HouseholdRepository;
 import org.roomly.repositories.ProfileRepository;
 import org.roomly.repositories.TransactionsRepository;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,18 +46,23 @@ class TransactionsServiceTest {
     @InjectMocks
     private TransactionsService transactionsService;
 
+    private static Authentication auth(String accountId) {
+        return new UsernamePasswordAuthenticationToken(accountId, null, emptyList());
+    }
+
     @Test
     void addTransactionSavesExpenseWithAuthenticatedSenderAndRecipient() {
+        Authentication authentication = auth("account-1");
         Household household = new Household().setId("household-1");
         Profile recipient = new Profile().setId("recipient-1").setHousehold(household);
         Profile sender = new Profile().setId("sender-1").setHousehold(household);
 
         when(profileRepository.findProfileById("recipient-1")).thenReturn(Optional.of(recipient));
-        when(profileService.getCurrentlyAuthenticatedUserProfile(household)).thenReturn(sender);
+        when(profileService.getCurrentlyAuthenticatedUserProfile(eq(household), any(Authentication.class))).thenReturn(sender);
         when(profileRepository.findProfileById("sender-1")).thenReturn(Optional.of(sender));
         when(transactionsRepository.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Transaction saved = transactionsService.addTransaction("Rent", 1250.0, "recipient-1", "EXPENSE");
+        Transaction saved = transactionsService.addTransaction("Rent", 1250.0, "recipient-1", "EXPENSE", authentication);
 
         assertEquals("Rent", saved.getTitle());
         assertEquals(1250.0, saved.getAmount());
@@ -69,44 +78,47 @@ class TransactionsServiceTest {
 
         assertThrows(
           EntityNotFoundException.class,
-          () -> transactionsService.addTransaction("Rent", 100.0, "missing-recipient", "INCOME")
+          () -> transactionsService.addTransaction("Rent", 100.0, "missing-recipient", "INCOME", auth("account-1"))
         );
     }
 
     @Test
     void addTransactionThrowsWhenAuthenticatedSenderProfileCannotBeLoaded() {
+        Authentication authentication = auth("account-1");
         Household household = new Household().setId("household-1");
         Profile recipient = new Profile().setId("recipient-1").setHousehold(household);
         Profile authenticated = new Profile().setId("sender-1").setHousehold(household);
 
         when(profileRepository.findProfileById("recipient-1")).thenReturn(Optional.of(recipient));
-        when(profileService.getCurrentlyAuthenticatedUserProfile(household)).thenReturn(authenticated);
+        when(profileService.getCurrentlyAuthenticatedUserProfile(eq(household), any(Authentication.class))).thenReturn(authenticated);
         when(profileRepository.findProfileById("sender-1")).thenReturn(Optional.empty());
 
         assertThrows(
           EntityNotFoundException.class,
-          () -> transactionsService.addTransaction("Rent", 100.0, "recipient-1", "INCOME")
+          () -> transactionsService.addTransaction("Rent", 100.0, "recipient-1", "INCOME", authentication)
         );
     }
 
     @Test
     void addTransactionThrowsWhenTypeIsInvalid() {
+        Authentication authentication = auth("account-1");
         Household household = new Household().setId("household-1");
         Profile recipient = new Profile().setId("recipient-1").setHousehold(household);
         Profile sender = new Profile().setId("sender-1").setHousehold(household);
 
         when(profileRepository.findProfileById("recipient-1")).thenReturn(Optional.of(recipient));
-        when(profileService.getCurrentlyAuthenticatedUserProfile(household)).thenReturn(sender);
+        when(profileService.getCurrentlyAuthenticatedUserProfile(eq(household), any(Authentication.class))).thenReturn(sender);
         when(profileRepository.findProfileById("sender-1")).thenReturn(Optional.of(sender));
 
         assertThrows(
           IllegalArgumentException.class,
-          () -> transactionsService.addTransaction("Rent", 100.0, "recipient-1", "UNKNOWN")
+          () -> transactionsService.addTransaction("Rent", 100.0, "recipient-1", "UNKNOWN", authentication)
         );
     }
 
     @Test
     void deleteTransactionReturnsTransactionWhenCurrentUserIsSender() {
+        Authentication authentication = auth("account-1");
         Household household = new Household().setId("household-1");
         Profile sender = new Profile().setId("sender-1").setHousehold(household);
         Profile recipient = new Profile().setId("recipient-1").setHousehold(household);
@@ -119,15 +131,17 @@ class TransactionsServiceTest {
           .setAmount(80.0);
 
         when(transactionsRepository.findById(10)).thenReturn(Optional.of(transaction));
-        when(profileService.getCurrentlyAuthenticatedUserProfile(household)).thenReturn(sender);
+        when(profileService.getCurrentlyAuthenticatedUserProfile(eq(household), any(Authentication.class))).thenReturn(sender);
 
-        Transaction result = transactionsService.deleteTransaction(10);
+        Transaction result = transactionsService.deleteTransaction(10, authentication);
 
         assertSame(transaction, result);
+        verify(transactionsRepository).delete(transaction);
     }
 
     @Test
     void deleteTransactionThrowsWhenCurrentUserIsNotSender() {
+        Authentication authentication = auth("account-2");
         Household household = new Household().setId("household-1");
         Profile sender = new Profile().setId("sender-1").setHousehold(household);
         Profile recipient = new Profile().setId("recipient-1").setHousehold(household);
@@ -135,20 +149,21 @@ class TransactionsServiceTest {
         Transaction transaction = new Transaction().setId(10).setSender(sender).setRecipient(recipient);
 
         when(transactionsRepository.findById(10)).thenReturn(Optional.of(transaction));
-        when(profileService.getCurrentlyAuthenticatedUserProfile(household)).thenReturn(otherUser);
+        when(profileService.getCurrentlyAuthenticatedUserProfile(eq(household), any(Authentication.class))).thenReturn(otherUser);
 
-        assertThrows(SecurityException.class, () -> transactionsService.deleteTransaction(10));
+        assertThrows(SecurityException.class, () -> transactionsService.deleteTransaction(10, authentication));
     }
 
     @Test
     void deleteTransactionThrowsWhenTransactionDoesNotExist() {
         when(transactionsRepository.findById(999)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> transactionsService.deleteTransaction(999));
+        assertThrows(EntityNotFoundException.class, () -> transactionsService.deleteTransaction(999, auth("account-1")));
     }
 
     @Test
     void getTransactionsByHouseholdIdReturnsTransactionsForAuthenticatedProfile() {
+        Authentication authentication = auth("account-1");
         Household household = new Household().setId("household-1");
         Profile currentProfile = new Profile().setId("profile-1").setHousehold(household);
         List<Transaction> expected = List.of(
@@ -157,10 +172,10 @@ class TransactionsServiceTest {
         );
 
         when(householdRepository.findById("household-1")).thenReturn(Optional.of(household));
-        when(profileService.getCurrentlyAuthenticatedUserProfile(household)).thenReturn(currentProfile);
+        when(profileService.getCurrentlyAuthenticatedUserProfile(eq(household), any(Authentication.class))).thenReturn(currentProfile);
         when(transactionsRepository.findAllProfilesTransactions("profile-1")).thenReturn(expected);
 
-        List<Transaction> result = transactionsService.getTransactionsByHouseholdId("household-1");
+        List<Transaction> result = transactionsService.getTransactionsByHouseholdId("household-1", authentication);
 
         assertEquals(expected, result);
     }
@@ -171,7 +186,7 @@ class TransactionsServiceTest {
 
         assertThrows(
           EntityNotFoundException.class,
-          () -> transactionsService.getTransactionsByHouseholdId("missing-household")
+          () -> transactionsService.getTransactionsByHouseholdId("missing-household", auth("account-1"))
         );
     }
 }

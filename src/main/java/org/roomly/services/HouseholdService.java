@@ -9,7 +9,6 @@ import org.roomly.enums.CodeCharacters;
 import org.roomly.generators.GeneratedCodeFactory;
 import org.roomly.repositories.HouseholdRepository;
 import org.roomly.repositories.ProfileRepository;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -92,12 +91,8 @@ public class HouseholdService {
      * @return list of households for the authenticated user
      * @throws IllegalStateException if the user is not authenticated
      */
-    public List<Household> getAllHouseholds () {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("User is not authenticated");
-        }
-        return householdRepository.findAllByAccount(authentication.getName());
+    public List<Household> getAllHouseholds (String accountId) {
+        return householdRepository.findAllByAccount(accountId);
     }
 
     /**

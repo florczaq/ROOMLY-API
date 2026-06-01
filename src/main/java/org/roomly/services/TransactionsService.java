@@ -9,6 +9,7 @@ import org.roomly.enums.TransactionType;
 import org.roomly.repositories.HouseholdRepository;
 import org.roomly.repositories.ProfileRepository;
 import org.roomly.repositories.TransactionsRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,12 +57,13 @@ public class TransactionsService {
     public Transaction addTransaction (String title,
       double amount,
       String recipientId,
-      String type
+      String type,
+      Authentication authentication
     ) {
         var recipient = profileRepository
           .findProfileById(recipientId)
           .orElseThrow(() -> new EntityNotFoundException("Recipient profile not found"));
-        String senderId = profileService.getCurrentlyAuthenticatedUserProfile(recipient.getHousehold()).getId();
+        String senderId = profileService.getCurrentlyAuthenticatedUserProfile(recipient.getHousehold(), authentication).getId();
         var sender = profileRepository
           .findProfileById(senderId)
           .orElseThrow(() -> new EntityNotFoundException("Sender profile not found"));
@@ -89,22 +91,23 @@ public class TransactionsService {
      * @throws EntityNotFoundException if no transaction exists with the given ID
      * @throws SecurityException       if the authenticated user is not the transaction's sender
      */
+    @Transactional
     @Notifiable(
       title = "Transaction Deleted: #{#result.title}",
-      description = "#{#result.sender.nickname} deleted a transaction: #{resulty.type == 'EXPENSE' ? '+' : '-'} #{#result.amount}",
+      description = "#{#result.sender.nickname} deleted a transaction: #{#result.type == 'EXPENSE' ? '+' : '-'} #{#result.amount}",
       recipientProfileId = "#{#result.recipient.id}"
     )
-    public Transaction deleteTransaction (int transactionId) {
+    public Transaction deleteTransaction (int transactionId, Authentication authentication) {
         Transaction transaction = this.getTransactionById(transactionId);
         var currentUserProfileId = profileService.getCurrentlyAuthenticatedUserProfile(
-          transaction.getSender().getHousehold()
+          transaction.getSender().getHousehold(), authentication
         ).getId();
 
-        // Only the sender of the transaction can delete it
         if (!transaction.getSender().getId().equals(currentUserProfileId)) {
             throw new SecurityException("You are not authorized to delete this transaction.");
         }
 
+        transactionsRepository.delete(transaction);
         return transaction;
     }
 
@@ -115,10 +118,10 @@ public class TransactionsService {
      * @return list of transactions involving the authenticated user's profile
      * @throws EntityNotFoundException if no household exists with the given ID
      */
-    public List<Transaction> getTransactionsByHouseholdId (String householdId) {
+    public List<Transaction> getTransactionsByHouseholdId (String householdId, Authentication authentication) {
         Household household = householdRepository.findById(householdId)
           .orElseThrow(() -> new EntityNotFoundException("Household not found with id: " + householdId));
-        String profileId = profileService.getCurrentlyAuthenticatedUserProfile(household).getId();
+        String profileId = profileService.getCurrentlyAuthenticatedUserProfile(household, authentication).getId();
         return transactionsRepository.findAllProfilesTransactions(profileId);
     }
 

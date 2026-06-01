@@ -11,7 +11,8 @@ public record HouseholdDTO(
   List<ProfileDTO> members,
   InventoryDTO sharedInventory,
   ShoppingListDTO sharedShoppingList,
-  int membersCount
+  int membersCount,
+  ProfileDTO currentUserProfile
 ) {
 
 }

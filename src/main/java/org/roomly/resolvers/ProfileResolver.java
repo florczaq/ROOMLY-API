@@ -24,22 +24,17 @@ public class ProfileResolver {
         return profileService.getProfileById(profileId).toDTO();
     }
 
-    @QueryMapping
-    @PreAuthorize("isAuthenticated()")
-    public ProfileDTO currentUserProfile(Authentication authentication) {
-        return profileService.getProfileById(authentication.getName()).toDTO();
-    }
-
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
     public ProfileDTO joinHousehold(
         @Argument String nickname,
         @Argument String avatarName,
         @Argument String avatarColorName,
-        @Argument String joinCode
+        @Argument String joinCode,
+        Authentication authentication
     ) {
         return householdOrchestrationService.addMemberToHousehold(
-            nickname, avatarName, avatarColorName, joinCode
+            nickname, avatarName, avatarColorName, joinCode, authentication
         ).toDTO();
     }
 
@@ -56,8 +51,8 @@ public class ProfileResolver {
 
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public boolean leaveHousehold(@Argument String profileId) {
-        householdOrchestrationService.removeMemberFromHousehold(profileId);
+    public boolean leaveHousehold(@Argument String profileId, Authentication authentication) {
+        householdOrchestrationService.removeMemberFromHousehold(profileId, authentication);
         return true;
     }
 }
