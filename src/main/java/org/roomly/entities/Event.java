@@ -9,6 +9,7 @@ import lombok.experimental.Accessors;
 import org.roomly.dto.EventDTO;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Entity
@@ -48,8 +49,8 @@ public class Event {
           id,
           name,
           description,
-          startTime,
-          endTime,
+          startTime != null ? startTime.atOffset(ZoneOffset.UTC) : null,
+          endTime != null ? endTime.atOffset(ZoneOffset.UTC) : null,
           household.getId(),
           creator.toDTO(),
           attendees != null ? attendees.stream().map(Profile::toDTO).toList() : List.of()

@@ -11,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,43 +24,43 @@ public class EventsResolver {
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
     public List<EventDTO> events (@Argument String householdId,
-      @Argument LocalDateTime from,
-      @Argument LocalDateTime to
+      @Argument OffsetDateTime from,
+      @Argument OffsetDateTime to
     ) {
         return eventsService
-          .getAllEvents(householdId, from, to)
+          .getAllEvents(householdId, toUtc(from), toUtc(to))
           .stream()
           .map(Event::toDTO)
           .toList();
     }
-    
+
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
     public EventDTO event (@Argument int eventId) {
         return eventsService.getEventById(eventId).toDTO();
     }
-    
+
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
     public List<EventDTO> eventsForProfile (@Argument String profileId,
-      @Argument LocalDateTime from,
-      @Argument LocalDateTime to
+      @Argument OffsetDateTime from,
+      @Argument OffsetDateTime to
     ) {
-        return eventsService.getAllEventsForProfile(profileId, from, to).stream().map(Event::toDTO).toList();
+        return eventsService.getAllEventsForProfile(profileId, toUtc(from), toUtc(to)).stream().map(Event::toDTO).toList();
     }
-    
+
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
     public EventDTO addEvent (@Argument String householdId,
       @Argument String name,
       @Argument String description,
-      @Argument LocalDateTime startTime,
-      @Argument LocalDateTime endTime,
+      @Argument OffsetDateTime startTime,
+      @Argument OffsetDateTime endTime,
       @Argument List<String> attendeeIds,
       Authentication authentication
     ) {
         return eventsService.addEvent(
-          householdId, name, description, startTime, endTime,
+          householdId, name, description, toUtc(startTime), toUtc(endTime),
           attendeeIds, authentication.getName()
         ).toDTO();
     }
@@ -68,12 +70,12 @@ public class EventsResolver {
     public EventDTO updateEvent (@Argument int eventId,
       @Argument String name,
       @Argument String description,
-      @Argument LocalDateTime startTime,
-      @Argument LocalDateTime endTime,
+      @Argument OffsetDateTime startTime,
+      @Argument OffsetDateTime endTime,
       @Argument List<String> attendeeIds
     ) {
         return eventsService.updateEvent(
-          eventId, name, description, startTime, endTime,
+          eventId, name, description, toUtc(startTime), toUtc(endTime),
           attendeeIds
         ).toDTO();
     }
@@ -82,6 +84,10 @@ public class EventsResolver {
     @PreAuthorize("isAuthenticated()")
     public Boolean deleteEvent (@Argument int eventId, Authentication authentication) {
         return eventsService.deleteEvent(eventId, authentication.getName());
+    }
+
+    private static LocalDateTime toUtc (OffsetDateTime dt) {
+        return dt == null ? null : dt.withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
     }
     
 }
