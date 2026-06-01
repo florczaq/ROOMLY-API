@@ -50,6 +50,7 @@ public class HouseholdResolver {
     }
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public HouseholdDTO householdByJoinCode(@Argument String joinCode) {
         return householdService.getHouseHoldByJoinCode(joinCode).toDTO();
     }

@@ -13,9 +13,6 @@ WORKDIR /app
 # Copy jar from build stage
 COPY --from=builder /workspace/build/libs/*.jar /app/app.jar
 
-# Copy assets (avatars and colors) from builder
-COPY --from=builder /workspace/src/main/java/org/roomly/assets /app/assets
-
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 

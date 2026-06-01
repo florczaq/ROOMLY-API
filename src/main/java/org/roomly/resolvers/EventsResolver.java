@@ -39,7 +39,7 @@ public class EventsResolver {
     
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    List<EventDTO> eventsForProfile (@Argument String profileId,
+    public List<EventDTO> eventsForProfile (@Argument String profileId,
       @Argument LocalDateTime from,
       @Argument LocalDateTime to
     ) {

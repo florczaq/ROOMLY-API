@@ -7,7 +7,7 @@ type Query{
     householdByJoinCode(joinCode: String!): Household!
     #=== PROFILE ===
     profile(profileId: String!): Profile!
-
+    currentUserProfile: Profile!
     #=== SHOPPING LIST ===
     shoppingList(id: Int!): ShoppingList!
     allShoppingLists(householdId: String!): [ShoppingList]!
@@ -25,7 +25,7 @@ type Query{
     #=== EVENTS ===
     events(householdId: String!, from: DateTime, to: DateTime): [Event]!
     event(eventId: Int!): Event!
-    eventsForProfile(profileId: String!, from: DateTime, to: DateTime): Event!
+    eventsForProfile(profileId: String!, from: DateTime, to: DateTime): [Event]!
 
     #=== TRANSACTIONS ===
     transactions(householdId: String!): [Transaction]!
