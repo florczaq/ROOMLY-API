@@ -17,5 +17,8 @@ public interface ShoppingListRepository extends JpaRepository<ShoppingList, Inte
     List<ShoppingList> findAllByHousehold (@Param("household") Household household);
     
     Optional<ShoppingList> getShoppingListById (int id);
+
+    @Query("SELECT COALESCE(p.household.id, h.id) FROM ShoppingList s LEFT JOIN s.owner p LEFT JOIN Household h ON h.sharedShoppingList = s WHERE s.id = :id")
+    Optional<String> findHouseholdIdById (@Param("id") int id);
 }
 

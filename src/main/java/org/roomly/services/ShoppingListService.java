@@ -85,7 +85,7 @@ public class ShoppingListService {
     @Notifiable(
         title = "Product '#{#result.product.name} added to your shopping list",
         description = "#{#result.addedBy.nickname} added '#{#result.product.name}' to your shopping list",
-        recipientProfileId = "#{#result.shoppingList.owner.id}"
+        recipientProfileId = "#{#result.shoppingList.owner?.id}"
     )
     @Transactional
     public ShoppingListItem addProductToShoppingList(int productId,
@@ -102,8 +102,11 @@ public class ShoppingListService {
             .findById(shoppingListId)
             .orElseThrow(() -> new EntityNotFoundException("Shopping list not found"));
 
+        String householdId = shoppingListRepository.findHouseholdIdById(shoppingListId)
+            .orElseThrow(() -> new EntityNotFoundException("Household not found for shopping list: " + shoppingListId));
+
         Profile addedBy = profileRepository
-            .findByHouseholdIdAndAccountId(shoppingList.getOwner().getHousehold().getId(), accountId)
+            .findByHouseholdIdAndAccountId(householdId, accountId)
             .orElseThrow(() -> new EntityNotFoundException("Profile not found for user: " + accountId));
 
         ShoppingListItem shoppingListItem = shoppingListItemRepository
@@ -146,7 +149,7 @@ public class ShoppingListService {
     @Notifiable(
         title = "Product '#{#result.product.name}' removed from your shopping list",
         description = "#{#result.addedBy.nickname} removed '#{#result.product.name}' from your shopping list",
-        recipientProfileId = "#{#result.shoppingList.owner.id}"
+        recipientProfileId = "#{#result.shoppingList.owner?.id}"
     )
     public ShoppingListItem removeProductFromShoppingList(int productId,
                                                           int shoppingListId,

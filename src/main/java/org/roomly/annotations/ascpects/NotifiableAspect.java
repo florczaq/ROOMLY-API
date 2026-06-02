@@ -74,7 +74,7 @@ public class NotifiableAspect {
 
         String recipientProfileId = evaluateExpression(notifiable.recipientProfileId(), context);
         if (recipientProfileId == null || recipientProfileId.isEmpty()) {
-            throw new IllegalArgumentException("Either recipientProfileId or recipientProfileIds must be set on @Notifiable");
+            return; // shared resource — no single owner to notify
         }
         if (!profileRepository.existsByIdAndAccountId(recipientProfileId, authentication.getName())) {
             notificationService.createAndSaveNotification(title, description, recipientProfileId);

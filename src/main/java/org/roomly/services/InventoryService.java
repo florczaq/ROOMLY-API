@@ -80,7 +80,7 @@ public class InventoryService {
     @Notifiable(
         title = "Product '#{#result.product.name} added to your inventory",
         description = "#{#result.addedBy.nickname} added '#{#result.product.name}' to your inventory",
-        recipientProfileId = "#{#result.inventory.owner.id}"
+        recipientProfileId = "#{#result.inventory.owner?.id}"
     )
     @Transactional
     public InventoryItem addProductToInventory(int productId,
@@ -142,7 +142,7 @@ public class InventoryService {
     @Notifiable(
         title = "Product '#{#result.product.name}' removed from your inventory",
         description = "#{#result.addedBy.nickname} removed '#{#result.product.name}' from your inventory",
-        recipientProfileId = "#{#result.inventory.owner.id}"
+        recipientProfileId = "#{#result.inventory.owner?.id}"
     )
     public InventoryItem removeProductFromInventory(int productId,
                                                     int shoppingListId,
