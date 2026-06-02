@@ -246,7 +246,12 @@ public class HouseholdOrchestrationService {
         if (!profile.getAccount().getId().equals(account.getId())) {
             throw new IllegalArgumentException("Profile does not belong to the currently authenticated user");
         }
-        
+
+        Household household = profile.getHousehold();
+        if (household.getOwner() != null && household.getOwner().getId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Household owner cannot leave the household. Delete the household or transfer ownership first.");
+        }
+
         householdService.removeMemberFromHousehold(profile);
         log.info("Removed member {} from household {}", profile.getId(), profile.getHousehold().getId());
         return profile.toDTO();
