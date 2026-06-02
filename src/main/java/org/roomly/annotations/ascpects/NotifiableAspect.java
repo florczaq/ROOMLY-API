@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 @Aspect
 @Component
@@ -36,63 +37,75 @@ public class NotifiableAspect {
         Method method = signature.getMethod();
         
         Notifiable notifiable = method.getAnnotation(Notifiable.class);
-        
-        // Create SpEL evaluation context with the result object
+
+        // Build SpEL context with result and all method parameters
         EvaluationContext context = new StandardEvaluationContext();
         context.setVariable("result", result);
+        String[] paramNames = signature.getParameterNames();
+        Object[] args = joinPoint.getArgs();
+        for (int i = 0; i < paramNames.length; i++) {
+            context.setVariable(paramNames[i], args[i]);
+        }
 
-        // Evaluate SpEL expressions
         String title = evaluateExpression(notifiable.title(), context);
         String description = evaluateExpression(notifiable.description(), context);
-        String recipientProfileId = evaluateExpression(notifiable.recipientProfileId(), context);
-        
-        if (recipientProfileId == null || recipientProfileId.isEmpty()) {
-            throw new IllegalArgumentException("Recipient profile ID cannot be null or empty");
-        }
-        
+
         if (title == null || title.isEmpty()) {
             throw new IllegalArgumentException("Notification title cannot be null or empty");
         }
-        
         if (description == null) {
             throw new IllegalArgumentException("Notification description cannot be null");
         }
-        
+
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("User is not authenticated");
         }
-        
-        //TODO this validation dont work and sends notification to the user itself, need to check if the recipientProfileId belongs to the authenticated user and skip notification if it does
-        
-        // Notify only if the recipientProfileId does not belong to the authenticated user
-        if (profileRepository.existsByIdAndAccountId(recipientProfileId, authentication.getName())) {
+
+        String multiExpr = notifiable.recipientProfileIds();
+        if (!multiExpr.isEmpty()) {
+            for (String profileId : evaluateAsStringList(multiExpr, context)) {
+                if (!profileId.isEmpty() && !profileRepository.existsByIdAndAccountId(profileId, authentication.getName())) {
+                    notificationService.createAndSaveNotification(title, description, profileId);
+                }
+            }
             return;
         }
-        
-        notificationService.createAndSaveNotification(title, description, recipientProfileId);
+
+        String recipientProfileId = evaluateExpression(notifiable.recipientProfileId(), context);
+        if (recipientProfileId == null || recipientProfileId.isEmpty()) {
+            throw new IllegalArgumentException("Either recipientProfileId or recipientProfileIds must be set on @Notifiable");
+        }
+        if (!profileRepository.existsByIdAndAccountId(recipientProfileId, authentication.getName())) {
+            notificationService.createAndSaveNotification(title, description, recipientProfileId);
+        }
     }
     
-    /**
-     * Evaluates a SpEL expression if it contains SpEL syntax, otherwise returns the literal string.
-     */
     private String evaluateExpression (String expression, EvaluationContext context) {
-        if (expression == null || expression.isEmpty()) {
-            return expression;
-        }
-        
-        // Check if the expression contains SpEL syntax
+        if (expression == null || expression.isEmpty()) return expression;
         if (expression.contains("#")) {
             try {
-                return parser
-                  .parseExpression(expression, new TemplateParserContext())
-                  .getValue(context, String.class);
+                return parser.parseExpression(expression, new TemplateParserContext()).getValue(context, String.class);
             } catch (Exception e) {
-                // If evaluation fails, log and return the original expression
                 throw new IllegalStateException("Failed to evaluate SpEL expression: " + expression, e);
             }
         }
-        
         return expression;
+    }
+
+    private List<String> evaluateAsStringList (String expression, EvaluationContext context) {
+        String inner = expression.trim();
+        if (inner.startsWith("#{") && inner.endsWith("}")) {
+            inner = inner.substring(2, inner.length() - 1);
+        }
+        try {
+            Object value = parser.parseExpression(inner).getValue(context);
+            if (value instanceof List<?> list) {
+                return list.stream().map(Object::toString).toList();
+            }
+            return List.of();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to evaluate SpEL list expression: " + expression, e);
+        }
     }
 }

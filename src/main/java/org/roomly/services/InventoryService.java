@@ -95,8 +95,11 @@ public class InventoryService {
 
         Inventory inventory = this.getInventory(inventoryId);
 
+        String householdId = inventoryRepository.findHouseholdIdById(inventoryId)
+            .orElseThrow(() -> new EntityNotFoundException("Household not found for inventory: " + inventoryId));
+
         Profile addedBy = profileRepository
-            .findByHouseholdIdAndAccountId(inventory.getOwner().getHousehold().getId(), accountId)
+            .findByHouseholdIdAndAccountId(householdId, accountId)
             .orElseThrow(() -> new EntityNotFoundException("Profile not found for user: " + accountId));
 
         Optional<InventoryItem> inventoryItem = inventoryItemRepository.findByInventoryAndProduct(inventory, product);

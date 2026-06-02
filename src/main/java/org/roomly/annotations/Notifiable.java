@@ -13,7 +13,9 @@ public @interface Notifiable {
     String description () default "";
     
     String recipientProfileId () default "";
-    
+
+    String recipientProfileIds () default "";
+
     Class<?>[] groups () default {};
     
     Class<? extends Payload>[] payload () default {};

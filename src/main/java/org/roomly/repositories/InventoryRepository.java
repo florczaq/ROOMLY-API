@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
@@ -17,5 +18,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     
     @Query("SELECT i FROM Inventory i LEFT JOIN i.owner p LEFT JOIN Household h ON (h.sharedInventory = i OR p.household = h) WHERE h.id = :householdId")
     List<Inventory> findAllByHouseholdId (@Param("householdId") String householdId);
+
+    @Query("SELECT COALESCE(p.household.id, h.id) FROM Inventory i LEFT JOIN i.owner p LEFT JOIN Household h ON h.sharedInventory = i WHERE i.id = :id")
+    Optional<String> findHouseholdIdById (@Param("id") int id);
 }
 

@@ -79,6 +79,11 @@ public class EventsService {
      * @param endTime     when the event ends
      * @return the persisted {@link Event}
      */
+    @Notifiable(
+      title = "New event: #{#result.name}",
+      description = "#{#result.creator.nickname} invited you to '#{#result.name}'",
+      recipientProfileIds = "#{#result.attendees.![id]}"
+    )
     public Event addEvent (String householdId, String name, String description,
                            LocalDateTime startTime, LocalDateTime endTime,
                            List<String> attendeeIds, String accountId) {
@@ -115,6 +120,11 @@ public class EventsService {
      * @return the updated and persisted {@link Event}
      * @throws EntityNotFoundException if no event exists with the given ID
      */
+    @Notifiable(
+      title = "Event updated: #{#result.name}",
+      description = "The event '#{#result.name}' has been updated",
+      recipientProfileIds = "#{#result.attendees.![id]}"
+    )
     public Event updateEvent (
       int eventId,
       String name,
@@ -151,37 +161,6 @@ public class EventsService {
             throw new SecurityException("User is not the creator of the event");
         }
         return true;
-    }
-    
-    /**
-     * Adds a profile as an attendee to an event. Only the event creator may perform this action.
-     * Sends a push notification to the added profile.
-     *
-     * @param eventId   ID of the event
-     * @param profileId ID of the profile to add as an attendee
-     * @return the updated {@link Event}
-     * @throws EntityNotFoundException  if the event does not exist
-     * @throws IllegalArgumentException if the profile is already an attendee
-     * @throws SecurityException        if the authenticated user is not the event creator
-     */
-    @Notifiable(
-      title = "You have been added to an event",
-      description = "You have been added as an attendee to the event: #{#result.name}",
-      recipientProfileId = "#{#profileId}"
-    )
-    public Event addAttendee (int eventId, String profileId, String accountId) {
-        Event event = this.getEventById(eventId);
-
-        if (event.getCreator().getAccount().getId().equals(accountId)) {
-            if (event.getAttendees().stream().anyMatch(profile -> profile.getId().equals(profileId))) {
-                throw new IllegalArgumentException(
-                  "Profile with id %s is already an attendee of the event".formatted(profileId));
-            }
-            event.getAttendees().add(new Profile().setId(profileId));
-            return eventsRepository.save(event);
-        } else {
-            throw new SecurityException("User is not the creator of the event");
-        }
     }
     
     /**
