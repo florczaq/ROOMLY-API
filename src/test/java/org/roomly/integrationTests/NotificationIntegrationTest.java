@@ -366,7 +366,7 @@ class NotificationIntegrationTest {
     }
 
     @Test
-    void addingEventAndTransaction_returnsTransactionNotificationExpressionErrorButKeepsMemberAuthenticated () throws Exception {
+    void addingEventAndTransaction_transactionSucceedsAndNotifiesMember () throws Exception {
         HouseholdContext context = createHouseholdWithTwoMembers(
           "owner.notifications@roomly.com",
           "OwnerNotifications",
@@ -402,12 +402,12 @@ class NotificationIntegrationTest {
           .andReturn();
 
         String transactionResponse = addTransactionResult.getResponse().getContentAsString();
-        assertTrue(
+        assertFalse(
           transactionResponse.contains("\"errors\""),
-          "Expected transaction mutation to return GraphQL errors with current notification expression configuration"
+          "Transaction mutation should succeed without GraphQL errors"
         );
 
         List<NotificationDTO> memberNotifications = getNotifications(context.memberTokens().accessToken());
-        assertTrue(memberNotifications.isEmpty(), "Expected no notification when transaction mutation returns errors");
+        assertEquals(1, memberNotifications.size(), "Member should receive 1 notification from the transaction");
     }
 }

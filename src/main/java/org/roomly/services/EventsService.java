@@ -164,11 +164,43 @@ public class EventsService {
     }
     
     /**
+     * Adds an attendee to an event. Only the event creator may perform this action.
+     * Sends a push notification to the added profile.
+     *
+     * @param eventId   ID of the event
+     * @param profileId ID of the profile to add
+     * @param accountId account ID of the authenticated user (must be creator)
+     * @return the updated {@link Event}
+     * @throws EntityNotFoundException  if the event does not exist
+     * @throws IllegalArgumentException if the profile is already an attendee
+     * @throws SecurityException        if the authenticated user is not the event creator
+     */
+    @Notifiable(
+      title = "You have been added to an event",
+      description = "You have been added as an attendee to the event: #{#result.name}",
+      recipientProfileId = "#{#profileId}"
+    )
+    public Event addAttendee (int eventId, String profileId, String accountId) {
+        Event event = this.getEventById(eventId);
+
+        if (!event.getCreator().getAccount().getId().equals(accountId)) {
+            throw new SecurityException("User is not the creator of the event");
+        }
+        if (event.getAttendees().stream().anyMatch(p -> p.getId().equals(profileId))) {
+            throw new IllegalArgumentException(
+              "Profile with id %s is already an attendee of the event".formatted(profileId));
+        }
+        event.getAttendees().add(new Profile().setId(profileId));
+        return eventsRepository.save(event);
+    }
+
+    /**
      * Removes an attendee from an event. Only the event creator may perform this action.
      * Sends a push notification to the removed profile.
      *
      * @param eventId   ID of the event
      * @param profileId ID of the profile to remove
+     * @param accountId account ID of the authenticated user (must be creator)
      * @return the updated {@link Event}
      * @throws EntityNotFoundException  if the event does not exist
      * @throws IllegalArgumentException if the profile is not currently an attendee
