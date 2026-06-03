@@ -26,7 +26,7 @@ public class Profile {
     @Column(name = "id", updatable = false, nullable = false)
     String id;
     
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     Account account;
     
