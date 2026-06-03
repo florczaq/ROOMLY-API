@@ -20,8 +20,16 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     
     @Query("SELECT COUNT(p) > 0 FROM Profile p WHERE p.household = :household AND (p.avatarName = :avatarName OR p.avatarColorName = :avatarColorName)")
     boolean existsByHouseholdAndAvatarNameOrAvatarColorName (Household household,
-      String avatarName,
-      String avatarColorName
+      @Param("avatarName") String avatarName,
+      @Param("avatarColorName") String avatarColorName
+    );
+
+    @Query("SELECT COUNT(p) > 0 FROM Profile p WHERE p.household = :household AND p.id <> :excludeProfileId AND (p.avatarName = :avatarName OR p.avatarColorName = :avatarColorName)")
+    boolean existsByHouseholdAndAvatarNameOrAvatarColorNameExcludingProfile(
+      @Param("household") Household household,
+      @Param("excludeProfileId") String excludeProfileId,
+      @Param("avatarName") String avatarName,
+      @Param("avatarColorName") String avatarColorName
     );
     
     List<Profile> findAllByHouseholdId (String householdId);

@@ -129,6 +129,17 @@ public class ProfileService {
         }
     }
 
+    private void validateAvatarCombinationAvailabilityExcluding(Household household,
+                                                                String excludeProfileId,
+                                                                String avatarName,
+                                                                String avatarColorName
+    ) {
+        if (profileRepository.existsByHouseholdAndAvatarNameOrAvatarColorNameExcludingProfile(
+            household, excludeProfileId, avatarName, avatarColorName)) {
+            throw new ConflictException("Avatar name or color is already taken in this household");
+        }
+    }
+
     /**
      * Validates that the avatar color is valid.
      */
@@ -197,7 +208,7 @@ public class ProfileService {
         if (avatarNameChanged || avatarColorChanged) {
             String newAvatarName = avatarName != null ? avatarName : profile.getAvatarName();
             String newAvatarColor = avatarColorName != null ? avatarColorName : profile.getAvatarColorName();
-            validateAvatarCombinationAvailability(household, newAvatarName, newAvatarColor);
+            validateAvatarCombinationAvailabilityExcluding(household, profile.getId(), newAvatarName, newAvatarColor);
         }
 
         if (nickname != null) {
