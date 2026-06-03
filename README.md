@@ -373,12 +373,6 @@ docs/
 
 ---
 
-## Authors
-
-**Florczak Mikołaj** — project creator and developer
-
----
-
 ## Acknowledgments
 
 - [OpenFoodFacts](https://world.openfoodfacts.org/) — open product database
