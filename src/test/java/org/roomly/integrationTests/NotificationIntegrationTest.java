@@ -91,7 +91,7 @@ class NotificationIntegrationTest {
         String mutation = String.format(
           """
           {
-              "query": "mutation { createHousehold(name: \\"Home\\", membersLimit: 5, nickname: \\"%s\\", avatarName: \\"Cat\\", avatarColorName: \\"blue\\") { id } }"
+              "query": "mutation { createHousehold(name: \\"Home\\", membersLimit: 5, nickname: \\"%s\\", avatarName: \\"Cat\\", avatarColorName: \\"Red\\") { id } }"
           }
           """, nickname
         );
@@ -155,7 +155,7 @@ class NotificationIntegrationTest {
         String createHouseholdMutation = String.format(
           """
           {
-              "query": "mutation { createHousehold(name: \\\"Home\\\", membersLimit: 5, nickname: \\\"%s\\\", avatarName: \\\"Cat\\\", avatarColorName: \\\"blue\\\") { id joinCode } }"
+              "query": "mutation { createHousehold(name: \\\"Home\\\", membersLimit: 5, nickname: \\\"%s\\\", avatarName: \\\"Cat\\\", avatarColorName: \\\"Red\\\") { id joinCode } }"
           }
           """, ownerNickname
         );
@@ -178,7 +178,7 @@ class NotificationIntegrationTest {
         String joinHouseholdMutation = String.format(
           """
           {
-              "query": "mutation { joinHousehold(nickname: \\\"%s\\\", avatarName: \\\"Dog\\\", avatarColorName: \\\"white\\\", joinCode: \\\"%s\\\") { id } }"
+              "query": "mutation { joinHousehold(nickname: \\\"%s\\\", avatarName: \\\"Dog\\\", avatarColorName: \\\"Green\\\", joinCode: \\\"%s\\\") { id } }"
           }
           """, memberNickname, joinCode
         );

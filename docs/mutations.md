@@ -27,8 +27,8 @@ mutation {
         name: "My Family"
         membersLimit: 6
         nickname: "Dad"
-        avatarName: "DOG_WHITE"
-        avatarColorName: "BLUE"
+        avatarName: "Dog"
+        avatarColorName: "Red"
     ) {
         id
         name
@@ -66,8 +66,8 @@ mutation {
     joinHousehold(
         joinCode: "ABC123"
         nickname: "Jane"
-        avatarName: "DOG_WHITE"
-        avatarColorName: "RED"
+        avatarName: "Fox"
+        avatarColorName: "Green"
     ) {
         id
         nickname

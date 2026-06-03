@@ -49,11 +49,11 @@ Represents an avatar with its associated color.
 **Java record:** `org.roomly.dto.AvatarDTO`  
 **GraphQL type:** `Avatar`
 
-| Field       | Type     | Nullable | Description                               |
-|-------------|----------|----------|-------------------------------------------|
-| `name`      | `String` | no       | Avatar name identifier (e.g. `DOG_WHITE`) |
-| `colorName` | `String` | no       | Color name (e.g. `BLUE`)                  |
-| `colorHex`  | `String` | no       | Color hex code (e.g. `#3B82F6`)           |
+| Field       | Type     | Nullable | Description                            |
+|-------------|----------|----------|----------------------------------------|
+| `name`      | `String` | no       | Avatar name (e.g. `Dog`, `Fox`)        |
+| `colorName` | `String` | no       | Color name (e.g. `Red`, `LightBlue`)   |
+| `colorHex`  | `String` | no       | Color hex code (e.g. `#ff0100`)        |
 
 ---
 
@@ -78,10 +78,10 @@ Represents a named color option.
 **Java record:** `org.roomly.dto.ColorDTO`  
 **GraphQL type:** `Color`
 
-| Field  | Type     | Nullable | Description                         |
-|--------|----------|----------|-------------------------------------|
-| `name` | `String` | no       | Color name identifier (e.g. `BLUE`) |
-| `hex`  | `String` | no       | Hex color code (e.g. `#3B82F6`)     |
+| Field  | Type     | Nullable | Description                              |
+|--------|----------|----------|------------------------------------------|
+| `name` | `String` | no       | Color name (e.g. `Red`, `LightBlue`)     |
+| `hex`  | `String` | no       | Hex color code (e.g. `#ff0100`)          |
 
 ---
 
@@ -200,3 +200,20 @@ Represents a financial transaction between two household members.
 | `sender`    | `ProfileDTO`    | no       | Profile that sent/initiated the transaction |
 | `recipient` | `ProfileDTO`    | no       | Profile that received the transaction       |
 | `type`      | `String`        | no       | `INCOME` or `EXPENSE`                       |
+
+---
+
+## NotificationDTO
+
+Represents a notification delivered to a profile.
+
+**Java record:** `org.roomly.notifications.dto.NotificationDTO`  
+**REST endpoint:** `GET /api/notifications`
+
+| Field       | Type            | Nullable | Description                          |
+|-------------|-----------------|----------|--------------------------------------|
+| `id`        | `String`        | no       | Unique notification ID               |
+| `title`     | `String`        | no       | Short notification title             |
+| `message`   | `String`        | no       | Full notification message body       |
+| `timestamp` | `LocalDateTime` | no       | When the notification was created    |
+| `profileId` | `String`        | no       | ID of the profile this was sent to   |

@@ -144,7 +144,7 @@ class HouseholdIntegrationTest {
 
         System.out.println("--- Step 2: Creating household ---");
         String createHouseholdQuery = String.format(
-          "mutation { createHousehold(name: \"%s\", membersLimit: %d, nickname: \"HomeOwner\", avatarName: \"Cat\", avatarColorName: \"blue\") { id name joinCode membersLimit sharedInventory { id } sharedShoppingList { id } } }",
+          "mutation { createHousehold(name: \"%s\", membersLimit: %d, nickname: \"HomeOwner\", avatarName: \"Cat\", avatarColorName: \"Red\") { id name joinCode membersLimit sharedInventory { id } sharedShoppingList { id } } }",
           householdName,
           membersLimit
         );
@@ -196,10 +196,10 @@ class HouseholdIntegrationTest {
         TokenResponse device2Tokens = registerAndLoginDevice("Device 2");
 
         System.out.println("--- Step 4: All users join the household ---");
-        MemberResources member1Resources = joinHouseholdAsDevice(device1Tokens, "DeviceUser1", "Dog", "white", joinCode);
+        MemberResources member1Resources = joinHouseholdAsDevice(device1Tokens, "DeviceUser1", "Dog", "Green", joinCode);
         assertResourceCounts(household, 3, 3, "after member 1 joins");
 
-        joinHouseholdAsDevice(device2Tokens, "DeviceUser2", "Rabbit", "red", joinCode);
+        joinHouseholdAsDevice(device2Tokens, "DeviceUser2", "Fox", "Orange", joinCode);
         assertResourceCounts(household, 4, 4, "after member 2 joins");
 
         return new DeviceSetup(

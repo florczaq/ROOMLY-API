@@ -38,6 +38,7 @@ ROOMLY organizes users into **households** — isolated multi-tenant units that 
 - **Product lookup** — barcode-based product search backed by the [OpenFoodFacts API](https://world.openfoodfacts.org/) with local caching
 - **Events** — household calendar events with start/end times, attendee management, and date-range filtering
 - **Transactions** — inter-profile financial records (INCOME/EXPENSE) with sender/recipient tracking
+- **Notifications** — in-app notifications delivered to profiles on key household events (joins, transactions, events)
 - **Authentication** — JWT access + refresh token flow with email/password and device-only modes
 
 ---
@@ -148,7 +149,7 @@ spring.jpa.hibernate.ddl-auto=update
 
 ## API
 
-ROOMLY exposes a GraphQL API with **14 queries** and **13 mutations**.
+ROOMLY exposes a GraphQL API with **14 queries** and **13 mutations**, plus REST endpoints for notifications.
 
 All requests are `POST /graphql`. Most operations require a JWT access token:
 
@@ -197,6 +198,13 @@ Obtain a token via the REST authentication endpoints (see [Security](#security))
 | `addTransaction(...)` | required | Record a transaction between profiles |
 | `deleteTransaction(transactionId)` | required | Delete a transaction |
 
+**REST Endpoints**
+
+| Endpoint | Auth | Description |
+|---|---|---|
+| `GET /api/notifications` | required | List all notifications for the authenticated user |
+| `POST /api/notifications/markAsRead` | required | Mark a list of notification IDs as read |
+
 For full argument lists, return types, and examples see:
 
 - [docs/queries.md](docs/queries.md)
@@ -212,8 +220,8 @@ mutation CreateHousehold {
         name: "My Family"
         membersLimit: 6
         nickname: "Dad"
-        avatarName: "DOG_WHITE"
-        avatarColorName: "BLUE"
+        avatarName: "Dog"
+        avatarColorName: "Red"
     ) {
         id
         joinCode
@@ -225,8 +233,8 @@ mutation JoinHousehold {
     joinHousehold(
         joinCode: "ABC123"
         nickname: "Mum"
-        avatarName: "DOG_WHITE"
-        avatarColorName: "RED"
+        avatarName: "Fox"
+        avatarColorName: "Green"
     ) {
         id
         nickname
@@ -328,7 +336,6 @@ The test suite includes integration tests that exercise the full Spring context 
 src/
 ├── main/java/org/roomly/
 │   ├── annotations/        # Custom validation annotations (@ValidBarcode, @Notifiable)
-│   ├── assets/             # Avatar and color catalog JSON files
 │   ├── cache/              # Custom LFU cache implementation
 │   ├── config/             # Spring configuration (GraphQL, cache, Jackson, WebClient)
 │   ├── controllers/        # REST controllers (avatar serving)
@@ -336,13 +343,15 @@ src/
 │   ├── entities/           # JPA entities
 │   ├── enums/              # Enumerations
 │   ├── generators/         # ID and join code generators
-│   ├── notifications/      # Notification entity and service
+│   ├── notifications/      # Notification entity, service, controller, and DTO
 │   ├── repositories/       # Spring Data JPA repositories
 │   ├── resolvers/          # GraphQL resolvers
 │   ├── security/           # JWT, authentication controllers and services
 │   ├── services/           # Business logic
 │   └── utils/              # Avatar and color utilities
 └── main/resources/
+    ├── assets/avatars/     # Avatar PNG files (ANIMAL_COLOR.png, uppercase)
+    ├── assets/colors/      # colors_catalog.json
     ├── graphql/schema.graphqls
     └── application*.properties
 
